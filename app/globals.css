@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 
-/* 다크모드를 클래스 기반으로 변경 (미디어쿼리 자동 적용 비활성화) */
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
