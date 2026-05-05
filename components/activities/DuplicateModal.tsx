@@ -1,0 +1,205 @@
+'use client';
+
+import { useState } from 'react';
+import { useToast } from '@/components/layout/Toast';
+import type { Activity } from '@/app/activities/page';
+
+interface DupGroup {
+  type: string;
+  month: string;
+  items: Activity[];
+}
+
+interface Props {
+  isOpen: boolean;
+  duplicateGroup: DupGroup;
+  onClose: () => void;
+  onResolve: () => void;
+}
+
+const BADGE: Record<string, string> = {
+  전기: 'bg-sky-100 text-sky-700',
+  원소재: 'bg-violet-100 text-violet-700',
+  운송: 'bg-orange-100 text-orange-700',
+};
+
+export default function DuplicateModal({
+  isOpen,
+  duplicateGroup,
+  onClose,
+  onResolve,
+}: Props) {
+  const { showToast } = useToast();
+  const [checked, setChecked] = useState<Set<string>>(new Set());
+
+  if (!isOpen) return null;
+  const { type, month, items } = duplicateGroup;
+  const allChecked = checked.size === items.length;
+  const [year, m] = month.split('-');
+
+  function toggleAll() {
+    setChecked(allChecked ? new Set() : new Set(items.map((i) => i.id)));
+  }
+  function toggleOne(id: string) {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  const selected = items.filter((i) => checked.has(i.id));
+  const totalAmount = selected.reduce((s, i) => s + i.amount, 0);
+  const totalEmission = selected.reduce((s, i) => s + i.emission, 0);
+  const unit = items[0]?.unit ?? '';
+
+  function handleDelete() {
+    showToast('success', `${checked.size}건 삭제되었습니다.`);
+    onResolve();
+  }
+
+  function handleMerge() {
+    showToast('success', '합산 완료되었습니다.');
+    onResolve();
+  }
+
+  const canDelete = checked.size >= 1;
+  const canMerge = checked.size >= 2;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-1">
+          <h2 className="text-base font-bold text-gray-900">
+            중복 데이터 확인
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="px-6 pb-4">
+          <p className="text-sm font-semibold text-[#16A34A]">
+            {type} · {year}년 {m}월 중복된 데이터 {items.length}건이 있습니다.
+          </p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            처리할 항목을 선택 후 삭제하거나 하나로 합산할 수 있습니다.
+          </p>
+        </div>
+
+        {/* Table */}
+        <div className="px-6 max-h-60 overflow-y-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100">
+                <th className="pb-2 pr-3 w-8">
+                  <input
+                    type="checkbox"
+                    checked={allChecked}
+                    onChange={toggleAll}
+                    className="rounded accent-green-600"
+                  />
+                </th>
+                {['날짜', '유형', '설명', '활동량', '단위', '배출량'].map(
+                  (h) => (
+                    <th
+                      key={h}
+                      className="pb-2 pr-3 text-left text-xs font-semibold text-gray-500 whitespace-nowrap"
+                    >
+                      {h}
+                    </th>
+                  ),
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id} className="border-b border-gray-50">
+                  <td className="py-2.5 pr-3">
+                    <input
+                      type="checkbox"
+                      checked={checked.has(item.id)}
+                      onChange={() => toggleOne(item.id)}
+                      className="rounded accent-green-600"
+                    />
+                  </td>
+                  <td className="py-2.5 pr-3 text-gray-700 whitespace-nowrap">
+                    {item.date}
+                  </td>
+                  <td className="py-2.5 pr-3">
+                    <span
+                      className={`px-1.5 py-0.5 rounded-full text-[11px] font-semibold ${BADGE[item.type] ?? 'bg-gray-100 text-gray-600'}`}
+                    >
+                      {item.type}
+                    </span>
+                  </td>
+                  <td
+                    className="py-2.5 pr-3 text-gray-600 max-w-25 truncate text-xs"
+                    title={item.description}
+                  >
+                    {item.description}
+                  </td>
+                  <td className="py-2.5 pr-3 text-gray-700 whitespace-nowrap">
+                    {item.amount.toLocaleString()}
+                  </td>
+                  <td className="py-2.5 pr-3 text-gray-500 whitespace-nowrap">
+                    {item.unit}
+                  </td>
+                  <td className="py-2.5 text-[#16A34A] font-semibold whitespace-nowrap">
+                    {item.emission.toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Summary */}
+        <div className="mx-6 mt-3 mb-4 flex items-center justify-between text-sm bg-gray-50 rounded-xl px-4 py-3">
+          <span className="text-gray-500">
+            선택한 항목:{' '}
+            <span className="font-semibold text-gray-800">
+              {checked.size}건
+            </span>
+          </span>
+          {checked.size >= 2 && (
+            <span className="text-gray-500">
+              합산 시 총 활동량:{' '}
+              <span className="font-semibold text-gray-800">
+                {totalAmount.toFixed(1)} {unit} → {totalEmission.toFixed(2)}{' '}
+                kgCO₂e
+              </span>
+            </span>
+          )}
+        </div>
+
+        {/* Buttons */}
+        <div className="flex gap-2 px-6 pb-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            취소
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={!canDelete}
+            className="px-4 py-2.5 rounded-xl border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            선택 삭제
+          </button>
+          <button
+            onClick={handleMerge}
+            disabled={!canMerge}
+            className="flex-1 py-2.5 rounded-xl bg-[#16A34A] text-white text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            선택 항목 합산하기
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

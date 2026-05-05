@@ -1,0 +1,13 @@
+export type Activity = {
+  id: string;
+  date: string;
+  type: string;
+  description: string;
+  amount: number;
+  unit: string;
+  factor_id: string;
+  factor_value_snapshot: number;
+  emission: number;
+  is_duplicate: boolean;
+  emission_factors: { name: string; scope: string; unit: string };
+};
