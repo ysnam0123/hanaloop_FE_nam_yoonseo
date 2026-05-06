@@ -47,8 +47,15 @@ export default function ActivityModal({
     setAmountError('');
   }, [isOpen, mode, data]);
 
-  const activeFactor = factors.find((f) => f.unit === TYPE_UNIT[type]);
-  const unit = TYPE_UNIT[type] ?? '';
+  // unit 매칭: 'kWh' / 'kgCO₂e/kWh' 등 형식 차이 무시하고 부분 문자열로 비교
+  const expectedUnit = TYPE_UNIT[type] ?? '';
+  const activeFactor = factors.find(
+    (f) =>
+      f.unit === expectedUnit ||
+      f.unit.includes(expectedUnit) ||
+      expectedUnit.includes(f.unit),
+  );
+  const unit = expectedUnit;
 
   function handleSave() {
     if (!amount || Number(amount) <= 0) {

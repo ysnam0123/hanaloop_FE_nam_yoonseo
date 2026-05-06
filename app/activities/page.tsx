@@ -14,39 +14,7 @@ import { useActivitiesQuery } from '@/hooks/activities/useActivities';
 import { useSaveActivityMutation } from '@/hooks/activities/useSaveActivity';
 import { useDeleteActivityMutation } from '@/hooks/activities/useDeleteActivity';
 import { useImportActivitiesMutation } from '@/hooks/activities/useImportActivities';
-
-const MOCK_FACTORS: Factor[] = [
-  {
-    id: 'f-1',
-    name: '한전 전력',
-    scope: 'Scope2',
-    factor_value: 0.4781,
-    unit: 'kWh',
-    version: 'v2025.1',
-    valid_from: '2025-01-01',
-    is_active: true,
-  },
-  {
-    id: 'f-2',
-    name: '알루미늄 원자재',
-    scope: 'Scope3',
-    factor_value: 8.14,
-    unit: 'kg',
-    version: 'v2025.1',
-    valid_from: '2025-01-01',
-    is_active: true,
-  },
-  {
-    id: 'f-3',
-    name: '화물 운송',
-    scope: 'Scope3',
-    factor_value: 0.092,
-    unit: 'ton-km',
-    version: 'v2025.1',
-    valid_from: '2025-01-01',
-    is_active: true,
-  },
-];
+import { useAllFactorsQuery } from '@/hooks/factors/useFactors';
 
 export default function ActivitiesPage() {
   const { showToast } = useToast();
@@ -65,6 +33,10 @@ export default function ActivitiesPage() {
     month: filters.month,
     type: filters.type,
   });
+
+  // 실제 DB의 활성 배출계수만 모달에 전달
+  const { data: allFactors = [] } = useAllFactorsQuery();
+  const activeFactors = allFactors.filter((f) => f.is_active);
 
   // 헤더 년도 변경 시 month 필터 리셋 (옛 년도의 month 값이 새 옵션에 없음)
   function handleYearChange(y: number) {
@@ -180,7 +152,7 @@ export default function ActivitiesPage() {
         isOpen={createOpen || !!editTarget}
         mode={editTarget ? 'edit' : 'create'}
         data={editTarget ?? undefined}
-        factors={MOCK_FACTORS}
+        factors={activeFactors}
         onClose={() => {
           setCreateOpen(false);
           setEditTarget(null);

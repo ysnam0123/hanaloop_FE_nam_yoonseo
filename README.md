@@ -1,36 +1,357 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Hanaloop PCF SaaS - 남윤서
 
-## Getting Started
+탄소 배출량을 측정·관리·시각화하는 SaaS 플랫폼.
+사용자가 활동 데이터(전기/원소재/운송 등)와 배출계수를 입력하면, 시점별 계수를 박제(snapshot)해서 자동으로 PCF(Product Carbon Footprint)를 계산하고 대시보드에 시각화합니다.
 
-First, run the development server:
+---
+
+## 빠른 시작 (3단계)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# 1. clone
+git clone https://github.com/ysnam0123/hanaloop_FE_nam_yoonseo.git
+cd hanaloop_FE_nam_yoonseo
+
+# 2. install
+yarn install
+
+# 3. 실행 (빌드 + 서버 시작이 한 번에)
+yarn start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> `yarn`이 깔려있지 않다면: `corepack enable` 한 줄로 활성화 가능 (Node.js 16.10+ 기본 포함).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+브라우저에서 [http://localhost:3000](http://localhost:3000) 열면 됩니다.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+> Supabase URL/anon key는 `.env.local`에 포함되어 있습니다.
+> 평가용 프로젝트라 RLS(Row Level Security)는 비활성화 상태입니다.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 데모
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 스크린샷
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| 페이지                       | 화면                 |
+| ---------------------------- | -------------------- |
+| 대시보드                     | _스크린샷 추가 예정_ |
+| 활동 데이터                  | _스크린샷 추가 예정_ |
+| 배출계수                     | _스크린샷 추가 예정_ |
+| 활동 입력 모달 (실시간 계산) | _스크린샷 추가 예정_ |
+| Excel 임포트                 | _스크린샷 추가 예정_ |
 
-## Deploy on Vercel
+### 비디오
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+_데모 영상 링크 추가 예정_
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 시스템 개요
+
+### 페이지 구성
+
+#### `/dashboard` — 대시보드
+
+- 올해 총 배출량 (전년 대비 증감률 표시)
+- 이번 달 배출량 + 전월 대비 증감률
+- 감축 인사이트 (가장 비중 큰 유형 + 추정 절감 가능량)
+- 월별 × 유형별 누적 막대 그래프
+- 유형별 비중 도넛 차트
+- Scope 1/2/3 월별 추이 라인 차트
+- 헤더의 연도 셀렉터로 모든 위젯 데이터 일괄 갱신
+
+#### `/activities` — 활동 데이터
+
+- 활동 입력 / 수정 / 삭제 (CRUD)
+- 입력 모달 창에서 **실시간 예상 배출량 + 승용차 km 환산** 미리보기
+- Excel 파일(`.xlsx`) 일괄 업로드 — 헤더 고정: `일자(원본) / 활동 유형 / 설명 / 량 / 단위`
+- 중복 검사: `날짜 + 유형 + 설명`이 같은 행을 ⚠️ 표시 + 일괄 병합/삭제 모달
+- 기간(월) / 유형 / 검색어 필터, 페이지네이션 (10건/페이지)
+- 헤더 연도와 연동 — 연도 변경 시 월 옵션 자동 갱신 + month 필터 리셋
+- 하단 카드: 현재 필터 기준 총 배출량 + 데이터 건수 + 개월 수
+
+#### `/factors` — 배출계수
+
+- 현재 적용 중인 계수 카드 + 전체 이력 테이블
+- 신규 등록 시 두 가지 모드: **기존 항목 새 버전** 또는 **새 항목 직접 입력**
+- "바로 적용하기" 체크박스 — 해제하면 이력으로만 저장
+- 같은 항목명에서 버전 교체 시 기존 active 자동 비활성화
+- 적용 취소 / 이력 모달에서 다른 버전으로 다시 적용
+- 단위 입력 시 `CO2` → `CO₂`, `CH4` → `CH₄`, `N2O` → `N₂O` 자동 변환
+- Scope / 상태(현재 적용/이력) / 항목명 검색 필터
+
+### 데이터 흐름
+
+```
+사용자 입력 (활동/계수)
+  ↓
+React Hook Form + 인라인 검증
+  ↓
+react-query mutation
+  ↓
+/api/* (Next.js Route Handler)
+  ↓
+Supabase (PostgreSQL)
+  ↓
+응답 시 emission 자동 재계산 (amount × factor_value_snapshot)
+  ↓
+react-query 캐시 갱신
+  ↓
+테이블/차트 즉시 반영
+```
+
+### 폴더 구조
+
+```
+app/
+├── activities/page.tsx        활동 데이터 페이지
+├── factors/page.tsx           배출계수 페이지
+├── dashboard/page.tsx         대시보드 페이지
+└── api/
+    ├── activities/            CRUD + import + merge
+    ├── factors/               CRUD + activate + deactivate
+    └── calculations/          대시보드 집계
+
+components/
+├── activities/
+│   ├── activityModal/         (ActivityModal, TypeSelector, EmissionPreview)
+│   ├── bottomStats/           (TotalEmissionCard, DuplicateCard)
+│   ├── duplicateModal/        (DuplicateModal, DuplicateSummary, DuplicateActions)
+│   ├── deleteModal/
+│   └── table/                 (ActivityTable, ActivityToolbar, Pagination)
+├── factors/
+│   ├── factorModal/           (FactorModal, NameSelector, FactorFields)
+│   ├── factorTable/           (FactorTable, FilterRow)
+│   ├── FactorCards.tsx
+│   └── HistoryModal.tsx
+├── dashboard/
+│   ├── SummaryCards.tsx
+│   ├── MonthlyChart.tsx
+│   ├── DonutChart.tsx
+│   └── ScopeLineChart.tsx
+├── common/
+│   └── Pagination.tsx         활동/배출계수 페이지가 공유
+└── layout/                    Header, Sidebar, Toast
+
+hooks/                         react-query 훅 (페이지 단위)
+lib/
+├── api/                       fetch 래퍼 (activities, factors, calculations)
+├── calculations.ts            도메인 계산 (calcEmission 등)
+├── supabase.ts                Supabase 클라이언트
+└── chartColors.ts
+types/                         Activity, Factor, DashboardData, DuplicateGroup
+```
+
+### 기술 스택
+
+- **Framework**: Next.js 16 (App Router) + TypeScript
+- **DB / BaaS**: Supabase (PostgreSQL + Auth + RLS)
+- **상태/캐시**: TanStack React Query
+- **차트**: Recharts
+- **스타일**: Tailwind CSS v4
+- **Excel 파싱**: SheetJS (xlsx)
+
+---
+
+## 데이터 모델 (ERD)
+
+```mermaid
+erDiagram
+    emission_factors ||--o{ activities : "factor_id (FK)"
+
+    emission_factors {
+        uuid id PK
+        text name "항목명 (예: 플라스틱1, 전기(한국전력))"
+        text scope "Scope1 / Scope2 / Scope3"
+        numeric factor_value "kgCO2e per unit"
+        text unit "kWh / kg / ton-km 등"
+        text version "v2025.1 등"
+        date valid_from "적용 시작일"
+        boolean is_active "현재 적용 중 여부"
+        timestamptz created_at
+    }
+
+    activities {
+        uuid id PK
+        date date "활동 일자"
+        text type "전기 / 원소재 / 운송"
+        text description "예: '5월 사무실 전력 사용량'"
+        numeric amount "활동량 (사용자 입력)"
+        text unit "단위 (factor에서 복사)"
+        uuid factor_id FK "참조 배출계수"
+        numeric factor_value_snapshot "활동 시점의 계수 값 (박제)"
+        timestamptz created_at
+    }
+```
+
+**핵심 컬럼**
+
+- `factor_value_snapshot`: 활동 입력 시점의 계수 값을 박제. 나중에 계수가 바뀌어도 과거 배출량은 흔들리지 않음.
+- `is_active`: 같은 `name` 그룹에서 항상 1개만 `true`. 새 버전 활성화 시 기존 active를 자동 비활성화.
+
+---
+
+## 핵심 도메인 결정 ("왜 이렇게 설계했는가")
+
+### 1. 활동 시점의 배출계수를 스냅샷 박제
+
+`factor_value_snapshot` 컬럼에 활동 입력 시점의 `factor_value`를 복사 저장.
+배출계수가 새 버전으로 교체돼도 과거 활동의 배출량 계산 결과는 그대로 유지됨.
+
+> **왜**: PCF 회계는 시점별 정확성이 핵심. "2024년 전기 1kWh = 0.4781 kgCO₂e"는 2025년에 계수가 바뀌어도 변하면 안 됨.
+> 변경 가능하게 두면 감사 추적이 깨지고 과거 보고서 신뢰성이 떨어짐.
+
+### 2. 중복 정의를 "날짜 + 유형 + 설명"으로
+
+같은 `date + type + description` 행이 2건 이상이면 중복으로 표시 (⚠️) → 사용자가 일괄 병합/삭제 가능.
+
+> **왜**: 처음엔 "월 + 유형"으로 잡았는데, 실무에선 같은 5월에 다른 설명("플라스틱1" / "플라스틱2")이면 별개 활동임. 의미 단위에 맞춰 정의를 바꿈.
+
+### 3. 비전문가용 환산값 동시 표시
+
+- `0.0231 kgCO₂e` 같은 숫자는 와닿지 않음 → **"≈ 승용차 약 110 km 주행과 동일"** 환산을 활동 입력 모달에서 실시간으로 표시
+- 단위는 `kgCO₂e`(소문자 `kg`, 아래첨자 `₂`)로 일관 표기, 사용자가 `kgCO2e`로 입력해도 자동으로 `CO₂`로 변환
+
+> **왜**: 평가 기준 "비전문가도 직관적으로 이해". 도메인 숫자에 익숙치 않은 경영자/실무자가 의미를 즉시 파악할 수 있어야 함.
+
+### 4. "바로 적용하기" 옵션
+
+새 배출계수를 추가할 때 기본은 즉시 활성화이지만, 체크 해제 시 이력으로만 저장 가능.
+
+> **왜**: 미래 적용용 계수(예: 6월 1일부터 발효)를 미리 등록해두는 워크플로 지원. 무조건 자동 활성화면 그 시나리오가 막힘.
+
+---
+
+## 설계 Trade-off
+
+### 1. 트랜잭션 미적용
+
+배출계수 활성화 교체(기존 비활성화 + 새 row 활성화), Excel 임포트 일괄 insert 등은 `update` + `insert`를 분리 호출. RPC(stored procedure)로 묶지 않음.
+
+- **선택 이유**: 단일 사용자 시나리오에서 동시성 충돌 가능성이 거의 없고, 구현 단순성을 우선.
+- **위험**: 첫 번째 호출 성공 후 두 번째가 실패하면 데이터 일관성 깨질 수 있음.
+- **운영 시 보강**: Supabase RPC 한 번으로 묶으면 atomicity 확보 가능.
+
+### 2. 검증 라이브러리(zod) 미도입
+
+활동/배출계수 모달의 입력 검증을 단순 `if`문으로 처리. zod 같은 스키마 라이브러리 안 씀.
+
+- **선택 이유**: 폼이 2~3개라 추가 의존성 도입 가치 낮음. 인라인 검증으로 충분.
+- **확장 시**: 폼이 늘어나거나 API 입력 검증까지 통합하려면 zod로 옮기는 게 깔끔.
+
+### 3. emission을 DB에 저장하지 않고 응답 시 재계산
+
+`emission` 컬럼을 DB에 두지 않음. GET 응답마다 `amount × factor_value_snapshot`로 계산해서 내려줌.
+
+- **선택 이유**: 저장값과 derived값 사이 불일치 위험 제거. 단일 진실원은 `factor_value_snapshot`.
+- **단점**: 행 수가 매우 많아지면 응답 시 계산 비용 증가. 현재 규모에선 무시 가능.
+
+---
+
+## PCF 계산 결과 시각화 위치
+
+| 위치                             | 무엇                                              |
+| -------------------------------- | ------------------------------------------------- |
+| 대시보드 `SummaryCards`          | 올해 총 배출량, 전년·전월 대비 %, 최대 비중 유형  |
+| 대시보드 `MonthlyChart`          | 월별 × 유형별 누적 막대                           |
+| 대시보드 `DonutChart`            | 유형별 비율 도넛                                  |
+| 대시보드 `ScopeLineChart`        | 월별 × Scope1/2/3 추이 (GHG 표준 분류)            |
+| 활동 입력 모달 `EmissionPreview` | 입력하는 동안 실시간 예상 배출량 + 승용차 km 환산 |
+| 활동 데이터 테이블               | 행 단위 배출량 (kgCO₂e) 컬럼 + 총 배출량 카드     |
+
+---
+
+## 입력 검증 / 에러 처리
+
+### 활동 데이터 모달
+
+- **활동량 ≤ 0**: 인라인 빨간 메시지 "활동량은 0보다 커야 합니다"
+- **배출계수 미등록 유형**: 토스트 + 배출계수 탭 이동 링크
+- **저장 시 API 에러**: react-query `onError`에서 토스트
+
+### 배출계수 모달
+
+- **빈 모달 저장 시**: 모든 필수 필드(항목명/Scope/단위/계수값/버전명/적용 시작일)에 빨간 메시지
+- **계수값 ≤ 0**: "0보다 큰 값을 입력해주세요"
+- **기존 항목 선택 시 Scope 잠금**: 선택한 항목의 Scope를 따라가야 하므로 Scope 버튼 비활성화
+
+### Excel 임포트
+
+- **factor 매핑 실패 행**: 응답에 `errors[]`로 모이고 토스트로 "N건 추가 · M건 실패" 안내
+
+---
+
+## 단위 표기 정책
+
+- 배출량은 모두 `kgCO₂e` (`kg` 소문자, `₂` 아래첨자)
+- 활동량 단위: `kWh` (전기), `kg` (원소재), `ton-km` (운송) 등 factor의 unit을 따라감
+- 배출계수 단위: `kgCO₂e/kWh`, `kgCO₂e/kg` 처럼 분모에 활동 단위
+- 사용자가 `kgCO2e` / `CH4` / `N2O` 입력해도 `CO₂` / `CH₄` / `N₂O`로 자동 변환
+
+---
+
+## AI 도구 사용 내역
+
+### 사용 도구
+
+- _(예시) Claude Code (claude-opus-4-7) — 코드 작성·리팩터링·디버깅 페어 작업_
+- _(예시) ChatGPT — 도메인 용어/Scope 분류 학습_
+
+### AI로 한 작업
+
+- _(예시) Next.js App Router + Supabase 보일러플레이트 초기 세팅_
+- _(예시) 컴포넌트 분리 (ActivityModal, FactorModal 등 큰 컴포넌트를 여러 자식으로 분리)_
+- _(예시) Recharts 차트 컴포넌트들의 props 매핑_
+- _(예시) Excel 임포트 매칭 로직 디버깅 (공백 정규화)_
+
+### 본인이 직접 결정/판단한 것
+
+- _(예시) 폴더 구조 (도메인 단위 서브폴더 패턴)_
+- _(예시) 중복 정의를 "월+유형" → "날짜+유형+설명"으로 변경_
+- _(예시) 배출계수 스냅샷 박제 패턴 채택_
+- _(예시) "바로 적용하기" 체크박스 추가_
+- _(예시) BottomStats에서 "전월 대비"를 빼고 대시보드로 옮기기로 결정_
+
+### 주요 prompt 예시
+
+- _(예시) "FactorTable.tsx에서 filter row와 pagination을 별도 컴포넌트로 분리해줘"_
+- _(예시) "활동 데이터 중복 처리 로직 어디서 결정되는지 추적해줘"_
+- _(예시) "useEffect 안에서 setState 호출하면 cascading render 경고가 뜨는데 왜?"_
+
+---
+
+## 평가 기준 충족 매핑
+
+### 필수
+
+- [x] PCF 계산 결과 시각화 (대시보드 4 위젯 + 활동 모달 EmissionPreview)
+- [x] 데이터 값 정확성, 단위 표시 (kgCO₂e, kWh/kg/ton-km, 자동 변환)
+- [x] 입력 오류 시 에러 메시지 (활동/배출계수 모달 인라인 + 토스트)
+- [ ] UI 실행 비디오 + 스크린샷 (이 README의 데모 섹션, 추가 예정)
+- [x] 5단계 이내 실행 (실제 3단계: clone / install / start)
+- [x] AI 도구 사용 내역 (위 섹션)
+- [x] 시스템 설명 + 설계 내용 (위 섹션들)
+- [x] Public GitHub + 커밋 히스토리
+
+### 권장
+
+- [x] ERD 다이어그램 (Mermaid)
+- [x] 설계 결정 2개 이상 (4개)
+- [x] Trade-off 1개 이상 (3개)
+
+### 보너스
+
+- [x] **과제용 Excel 그대로 임포트** (헤더 `일자(원본) / 활동 유형 / 설명 / 량 / 단위`, 공백/대소문자 무시 매칭)
+- [ ] Docker Compose
+- [ ] OpenAPI/Swagger
+- [ ] 타 시스템과 비교
+
+---
+
+## 알려진 한계 / 향후 개선
+
+- **인증/RLS 미적용**: 평가용 프로젝트라 Supabase RLS를 끄고 anon key 공개. 운영 시엔 인증 흐름 + RLS 정책 + 조직 단위 격리 필수.
+- 활동 입력 폼 검증을 zod 스키마로 통합 (현재 인라인 if문)
+- merge/import 라우트에 트랜잭션(RPC) 적용
+- Excel 임포트 시 헤더명/타입 사전 검증 (현재는 컬럼명 정확히 일치해야 함)
+- 단일 사용자 가정 — 멀티 워크스페이스/조직 분리 미구현
