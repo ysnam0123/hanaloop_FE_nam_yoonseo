@@ -19,9 +19,7 @@ yarn install
 yarn start
 ```
 
-> `yarn`이 깔려있지 않다면: `corepack enable` 한 줄로 활성화 가능 (Node.js 16.10+ 기본 포함).
-
-브라우저에서 [http://localhost:3000](http://localhost:3000) 열면 됩니다.
+브라우저에서 [http://localhost:3000](http://localhost:3000) 실행
 
 > Supabase URL/anon key는 `.env.local`에 포함되어 있습니다.
 > 평가용 프로젝트라 RLS(Row Level Security)는 비활성화 상태입니다.
