@@ -328,7 +328,7 @@ erDiagram
 ### 활동 데이터 모달
 
 - **활동량 ≤ 0**: 인라인 빨간 메시지 "활동량은 0보다 커야 합니다"
-- **배출계수 미등록 유형**: 토스트 + 배출계수 탭 이동 링크
+- **배출계수 미등록 유형**: TypeSelector에 경고 + 배출계수 탭 이동 링크 / 저장 시도하면 토스트
 - **저장 시 API 에러**: react-query `onError`에서 토스트
 
 ### 배출계수 모달
@@ -355,16 +355,20 @@ erDiagram
 ## AI 도구 사용 내역
 
 ### 사용 도구
+- **Claude Code (Sonnet/Opus)** — 코드 작성·리팩터링·디버깅 페어 작업, README 초안                                                                                                                                        
+- **Claude** — 도메인 용어 학습, 도메인 구조 파악
+- **Google Stitch** — 디자인 초안 생성                                                                                                                                                                                    
+- **Figma** — Stitch 디자인을 본인이 직접 수정/정리
 
-- _(예시) Claude Code (claude-opus-4-7) — 코드 작성·리팩터링·디버깅 페어 작업_
-- _(예시) ChatGPT — 도메인 용어/Scope 분류 학습_
-
-### AI로 한 작업
-
-- _(예시) Next.js App Router + Supabase 보일러플레이트 초기 세팅_
-- _(예시) 컴포넌트 분리 (ActivityModal, FactorModal 등 큰 컴포넌트를 여러 자식으로 분리)_
-- _(예시) Recharts 차트 컴포넌트들의 props 매핑_
-- _(예시) Excel 임포트 매칭 로직 디버깅 (공백 정규화)_
+ ### AI에게 위임한 작업
+- **디자인 초안 생성** (Google Stitch) → 본인이 Figma에서 정리/수정
+- **퍼블리싱 (Tailwind + 컴포넌트 코드)** — Figma 디자인을 Claude Code로 전환
+- **DB 스키마 / API 설계 문서화** — 본인이 요구사항 설명 → AI가 supabase SQL 정리
+- **대시보드 집계 로직** (`/api/calculations`의 `sumEmission`, `changeRate`, `monthlyByType` 누적, `scopeMonthly` 분류, `calcInsight` 등)
+- **솔직히 도메인+TS 누적 로직이 어려워 AI 의존도 높았음**. AI가 작성한 코드를 본인이 검토하고 의도와 맞는지 확인
+- **타입 에러 / 빌드 에러 진단** — Claude Code에 에러 출력 붙여 원인+해결책 받음
+- **컴포넌트 분리 실행** — 본인이 "어디를 분리할지" 지시, AI가 props 설계 + 코드 이동
+- **README 초안** — 구조와 표현은 AI 초안, 실제 내용은 본인 검증/수정
 
 ### 본인이 직접 결정/판단한 것
 
@@ -380,7 +384,11 @@ erDiagram
 - _(예시) "활동 데이터 중복 처리 로직 어디서 결정되는지 추적해줘"_
 - _(예시) "useEffect 안에서 setState 호출하면 cascading render 경고가 뜨는데 왜?"_
 
----
+### AI 사용에 대한 솔직한 회고                                 
+- **잘 한 점**: AI가 짠 코드를 그대로 받지 않고 "왜 이렇게 짰는지", "내 의도와 맞는지" 매번 검증. 본인이 거절한 AI 제안도 있음 (`useFactorForm` 훅 추출).
+- **한계**: 대시보드 집계 로직(`/api/calculations`의 월별 × 유형별 누적, Scope 분기, 인사이트 계산)은 도메인 + TS 누적 패턴이 어려워 AI 의존도 높았음. 받은 코드를 동작 검증 + 변형하는 방식으로 가져감.                 
+
+---     
 
 ## 평가 기준 충족 매핑
 
@@ -409,11 +417,3 @@ erDiagram
 - [ ] 타 시스템과 비교
 
 ---
-
-## 알려진 한계 / 향후 개선
-
-- **인증/RLS 미적용**: 평가용 프로젝트라 Supabase RLS를 끄고 anon key 공개. 운영 시엔 인증 흐름 + RLS 정책 + 조직 단위 격리 필수.
-- 활동 입력 폼 검증을 zod 스키마로 통합 (현재 인라인 if문)
-- merge/import 라우트에 트랜잭션(RPC) 적용
-- Excel 임포트 시 헤더명/타입 사전 검증 (현재는 컬럼명 정확히 일치해야 함)
-- 단일 사용자 가정 — 멀티 워크스페이스/조직 분리 미구현
