@@ -32,10 +32,13 @@ yarn start
 
 #### 대시보드
 <img width="700" alt="대시보드" src="https://github.com/user-attachments/assets/d1a9699d-0554-4c83-94b7-9e04bffdfe3a" />
+> 대시보드 홈 화면
 
 #### 활동 데이터
 <img width="450" alt="활동 데이터 - 목록" src="https://github.com/user-attachments/assets/210bc3d4-6fd0-49a1-a158-616ba7d63685" />
-<img width="450" alt="활동 데이터 - 상세" src="https://github.com/user-attachments/assets/da438d79-94b2-4985-b814-5a5e1fe3de15" />
+> 활동 데이터 화면
+<img width="450" height="593" alt="" src="https://github.com/user-attachments/assets/c630b0e1-d800-4586-9c09-4a7799e76fed" />
+> 활동 데이터 화면
 
 #### 배출계수
 <img width="450" alt="배출계수 - 라이브러리" src="https://github.com/user-attachments/assets/9fed4098-5f98-4703-9945-1c954e25eb36" />
