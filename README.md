@@ -22,7 +22,7 @@ yarn start
 브라우저에서 [http://localhost:3000](http://localhost:3000) 실행
 
 > Supabase URL/anon key는 `.env.local`에 포함되어 있습니다.
-> 평가용 프로젝트라 RLS(Row Level Security)는 비활성화 상태입니다.
+> RLS(Row Level Security)는 비활성화 상태입니다.
 
 ---   
   ### 스크린샷                                                                                                                  
