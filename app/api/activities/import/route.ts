@@ -35,11 +35,14 @@ export async function POST(request: NextRequest) {
     const amount = Number(row['량']);
     const unit = row['단위'] as string;
 
+    // 공백/대소문자 차이로 매칭 놓치지 않도록 정규화 후 부분 문자열 비교
+    const desc = (description ?? '').replace(/\s+/g, '').toLowerCase();
     let factor: { id: string; name: string; factor_value: number } | null =
       null;
     for (let j = 0; j < factors.length; j++) {
       const f = factors[j];
-      if (f.name.includes(description) || description.includes(f.name)) {
+      const fname = (f.name ?? '').replace(/\s+/g, '').toLowerCase();
+      if (fname.includes(desc) || desc.includes(fname)) {
         factor = f;
         break;
       }

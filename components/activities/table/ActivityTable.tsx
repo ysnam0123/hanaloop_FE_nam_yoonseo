@@ -22,6 +22,7 @@ interface Props {
   onDelete: (a: Activity) => void;
   onCreate: () => void;
   onDuplicateClick: (a: Activity) => void;
+  onImport: (file: File) => void;
 }
 
 export default function ActivityTable({
@@ -33,6 +34,7 @@ export default function ActivityTable({
   onDelete,
   onCreate,
   onDuplicateClick,
+  onImport,
 }: Props) {
   const [page, setPage] = useState(1);
 
@@ -56,6 +58,7 @@ export default function ActivityTable({
         filters={filters}
         onFilterChange={changeFilter}
         onCreate={onCreate}
+        onImport={onImport}
       />
 
       {/* Table */}

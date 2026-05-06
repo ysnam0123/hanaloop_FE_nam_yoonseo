@@ -13,6 +13,7 @@ import { Factor } from '@/types/factor';
 import { useActivitiesQuery } from '@/hooks/activities/useActivities';
 import { useSaveActivityMutation } from '@/hooks/activities/useSaveActivity';
 import { useDeleteActivityMutation } from '@/hooks/activities/useDeleteActivity';
+import { useImportActivitiesMutation } from '@/hooks/activities/useImportActivities';
 
 const MOCK_FACTORS: Factor[] = [
   {
@@ -102,6 +103,26 @@ export default function ActivitiesPage() {
     deleteMutation.mutate(deleteTarget.id);
   }
 
+  // Excel 임포트
+  const importMutation = useImportActivitiesMutation({
+    onSuccess: (result) => {
+      const failed = result.errors.length;
+      if (failed === 0) {
+        showToast('success', `${result.inserted}건 임포트 완료`);
+      } else {
+        showToast(
+          'warning',
+          `${result.inserted}건 추가 · ${failed}건 실패 (배출계수 매핑 실패 등)`,
+        );
+      }
+    },
+    onError: () => showToast('error', '임포트 실패'),
+  });
+
+  function handleImport(file: File) {
+    importMutation.mutate(file);
+  }
+
   function openDuplicateGroup(activity: Activity) {
     setDuplicateGroup({
       date: activity.date,
@@ -145,6 +166,7 @@ export default function ActivitiesPage() {
           onDelete={setDeleteTarget}
           onCreate={() => setCreateOpen(true)}
           onDuplicateClick={openDuplicateGroup}
+          onImport={handleImport}
         />
 
         <BottomStats
