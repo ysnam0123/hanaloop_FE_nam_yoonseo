@@ -7,17 +7,7 @@ import FactorTable from '@/components/factors/FactorTable';
 import FactorModal from '@/components/factors/FactorModal';
 import HistoryModal from '@/components/factors/HistoryModal';
 import { useToast } from '@/components/layout/Toast';
-
-export interface Factor {
-  id: string;
-  name: string;
-  scope: string;
-  factor_value: number;
-  unit: string;
-  version: string;
-  valid_from: string;
-  is_active: boolean;
-}
+import { Factor } from '@/types/factor';
 
 const MOCK_FACTORS: Factor[] = [
   {
@@ -126,10 +116,7 @@ export default function FactorsPage() {
         return f;
       }),
     );
-    showToast(
-      'success',
-      `${factor.version}이 현재 배출계수로 적용되었습니다.`,
-    );
+    showToast('success', `${factor.version}이 현재 배출계수로 적용되었습니다.`);
     setHistoryTarget(null);
   }
 

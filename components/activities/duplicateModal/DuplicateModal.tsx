@@ -2,17 +2,14 @@
 
 import { useState } from 'react';
 import { useToast } from '@/components/layout/Toast';
-import type { Activity } from '@/app/activities/page';
-
-interface DupGroup {
-  type: string;
-  month: string;
-  items: Activity[];
-}
+import type { DuplicateGroup } from '@/types/activities';
+import { useMergeActivitiesMutation } from '@/hooks/activities/useMergeActivities';
+import DuplicateSummary from './DuplicateSummary';
+import DuplicateActions from './DuplicateActions';
 
 interface Props {
   isOpen: boolean;
-  duplicateGroup: DupGroup;
+  duplicateGroup: DuplicateGroup;
   onClose: () => void;
   onResolve: () => void;
 }
@@ -33,9 +30,8 @@ export default function DuplicateModal({
   const [checked, setChecked] = useState<Set<string>>(new Set());
 
   if (!isOpen) return null;
-  const { type, month, items } = duplicateGroup;
+  const { date, type, description, items } = duplicateGroup;
   const allChecked = checked.size === items.length;
-  const [year, m] = month.split('-');
 
   function toggleAll() {
     setChecked(allChecked ? new Set() : new Set(items.map((i) => i.id)));
@@ -53,23 +49,34 @@ export default function DuplicateModal({
   const totalEmission = selected.reduce((s, i) => s + i.emission, 0);
   const unit = items[0]?.unit ?? '';
 
+  const mergeMutation = useMergeActivitiesMutation({
+    onSuccess: (vars) => {
+      if (vars.action === 'delete') {
+        showToast('success', `${vars.ids.length}건 삭제되었습니다.`);
+      } else {
+        showToast('success', '합산 완료되었습니다.');
+      }
+      onResolve();
+    },
+    onError: (vars) =>
+      showToast('error', vars.action === 'delete' ? '삭제 실패' : '합산 실패'),
+  });
+
   function handleDelete() {
-    showToast('success', `${checked.size}건 삭제되었습니다.`);
-    onResolve();
+    const ids: string[] = [];
+    checked.forEach((id) => ids.push(id));
+    mergeMutation.mutate({ ids: ids, action: 'delete' });
   }
 
   function handleMerge() {
-    showToast('success', '합산 완료되었습니다.');
-    onResolve();
+    const ids: string[] = [];
+    checked.forEach((id) => ids.push(id));
+    mergeMutation.mutate({ ids: ids, action: 'merge' });
   }
-
-  const canDelete = checked.size >= 1;
-  const canMerge = checked.size >= 2;
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-1">
           <h2 className="text-base font-bold text-gray-900">
             중복 데이터 확인
@@ -83,7 +90,8 @@ export default function DuplicateModal({
         </div>
         <div className="px-6 pb-4">
           <p className="text-sm font-semibold text-[#16A34A]">
-            {type} · {year}년 {m}월 중복된 데이터 {items.length}건이 있습니다.
+            {type} · {date} · &ldquo;{description}&rdquo; 중복된 데이터{' '}
+            {items.length}건이 있습니다.
           </p>
           <p className="text-xs text-gray-400 mt-0.5">
             처리할 항목을 선택 후 삭제하거나 하나로 합산할 수 있습니다.
@@ -157,48 +165,19 @@ export default function DuplicateModal({
           </table>
         </div>
 
-        {/* Summary */}
-        <div className="mx-6 mt-3 mb-4 flex items-center justify-between text-sm bg-gray-50 rounded-xl px-4 py-3">
-          <span className="text-gray-500">
-            선택한 항목:{' '}
-            <span className="font-semibold text-gray-800">
-              {checked.size}건
-            </span>
-          </span>
-          {checked.size >= 2 && (
-            <span className="text-gray-500">
-              합산 시 총 활동량:{' '}
-              <span className="font-semibold text-gray-800">
-                {totalAmount.toFixed(1)} {unit} → {totalEmission.toFixed(2)}{' '}
-                kgCO₂e
-              </span>
-            </span>
-          )}
-        </div>
+        <DuplicateSummary
+          selectedCount={checked.size}
+          totalAmount={totalAmount}
+          totalEmission={totalEmission}
+          unit={unit}
+        />
 
-        {/* Buttons */}
-        <div className="flex gap-2 px-6 pb-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
-          >
-            취소
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={!canDelete}
-            className="px-4 py-2.5 rounded-xl border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            선택 삭제
-          </button>
-          <button
-            onClick={handleMerge}
-            disabled={!canMerge}
-            className="flex-1 py-2.5 rounded-xl bg-[#16A34A] text-white text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            선택 항목 합산하기
-          </button>
-        </div>
+        <DuplicateActions
+          selectedCount={checked.size}
+          onClose={onClose}
+          onDelete={handleDelete}
+          onMerge={handleMerge}
+        />
       </div>
     </div>
   );
