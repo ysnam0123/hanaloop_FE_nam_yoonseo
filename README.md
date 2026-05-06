@@ -89,7 +89,7 @@ yarn start
   #### 배출계수
                                                                                                                                 
   **배출계수 추가**                                                                                                             
-  <img width="800" height="397" alt="배출계수 추가" src="https://github.com/user-attachments/assets/8b9a8900-6668-4154-b962-54701375121b" />
+  <img width="800" height="397" alt="배출계수추가모달창" src="https://github.com/user-attachments/assets/83272d7c-e40f-4a64-b624-6e50a90ae61b" />
   > 새 항목 또는 기존 항목의 새 버전을 등록합니다. "바로 적용하기" 옵션으로 즉시 활성화 여부를 선택합니다.                      
 
   **입력 검증 / 에러 메시지**                                                                                                   
