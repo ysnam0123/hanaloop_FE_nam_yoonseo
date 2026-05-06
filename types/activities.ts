@@ -11,3 +11,10 @@ export type Activity = {
   is_duplicate: boolean;
   emission_factors: { name: string; scope: string; unit: string };
 };
+
+export interface DuplicateGroup {
+  date: string;
+  type: string;
+  description: string;
+  items: Activity[];
+}

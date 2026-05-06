@@ -2,19 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useToast } from '@/components/layout/Toast';
-import { calcEmission, calcCarEquivalent } from '@/lib/calculations';
-import type { Activity, Factor } from '@/app/activities/page';
-
-const TYPE_UNIT: Record<string, string> = {
-  전기: 'kWh',
-  원소재: 'kg',
-  운송: 'ton-km',
-};
-const TYPE_ICON: Record<string, string> = {
-  전기: '⚡',
-  원소재: '🏭',
-  운송: '🚛',
-};
+import { Activity } from '@/types/activities';
+import { Factor } from '@/types/factor';
+import TypeSelector, { TYPE_UNIT } from './TypeSelector';
+import EmissionPreview from './EmissionPreview';
 
 interface Props {
   isOpen: boolean;
@@ -58,11 +49,6 @@ export default function ActivityModal({
 
   const activeFactor = factors.find((f) => f.unit === TYPE_UNIT[type]);
   const unit = TYPE_UNIT[type] ?? '';
-  const emission = calcEmission(
-    Number(amount) || 0,
-    activeFactor?.factor_value ?? 0,
-  );
-  const carKm = calcCarEquivalent(emission);
 
   function handleSave() {
     if (!amount || Number(amount) <= 0) {
@@ -98,53 +84,18 @@ export default function ActivityModal({
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+            className="text-gray-400 cursor-pointer hover:text-gray-600 text-lg leading-none"
           >
             ✕
           </button>
         </div>
 
         <div className="px-6 pb-6 space-y-5">
-          {/* 유형 선택 */}
-          <div>
-            <p className="text-xs font-semibold text-gray-600 mb-2">
-              유형 선택
-            </p>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {Object.keys(TYPE_UNIT).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setType(t)}
-                  className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold border-2 whitespace-nowrap transition-colors ${
-                    type === t
-                      ? 'border-[#16A34A] bg-[#F0FDF4] text-[#16A34A]'
-                      : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
-                  }`}
-                >
-                  <span>{TYPE_ICON[t]}</span> {t}
-                </button>
-              ))}
-              <button
-                onClick={() =>
-                  showToast(
-                    'warning',
-                    '새 유형은 배출계수 탭에서 먼저 등록해주세요.',
-                  )
-                }
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold border-2 border-dashed border-gray-200 text-gray-400 whitespace-nowrap hover:border-gray-300"
-              >
-                + 유형 추가
-              </button>
-            </div>
-            {!activeFactor && (
-              <p className="mt-1.5 text-xs text-amber-600">
-                새 유형은 배출계수 탭에서 먼저 등록해주세요{' '}
-                <a href="/factors" className="underline font-medium">
-                  배출계수 탭으로 이동 →
-                </a>
-              </p>
-            )}
-          </div>
+          <TypeSelector
+            type={type}
+            onTypeChange={setType}
+            hasActiveFactor={!!activeFactor}
+          />
 
           {/* 날짜 + 단위 */}
           <div className="grid grid-cols-2 gap-3">
@@ -206,28 +157,11 @@ export default function ActivityModal({
             )}
           </div>
 
-          {/* 예상 배출량 박스 */}
-          <div className="bg-[#F0FDF4] rounded-xl p-4 space-y-1.5">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">현재 적용 계수:</span>
-              <span className="text-gray-700 font-medium">
-                {activeFactor
-                  ? `${activeFactor.factor_value} kgCO₂e/${unit}`
-                  : '—'}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">입력량 기준 예상 배출량:</span>
-              <span className="text-[#16A34A] font-bold text-base">
-                {emission.toFixed(2)} kgCO₂e
-              </span>
-            </div>
-            {type === '운송' && emission > 0 && (
-              <p className="text-xs text-gray-400 mt-1">
-                ≈ 승용차 약 {Math.round(carKm).toLocaleString()}km 주행과 동일
-              </p>
-            )}
-          </div>
+          <EmissionPreview
+            amount={amount}
+            factor={activeFactor}
+            unit={unit}
+          />
 
           {/* Buttons */}
           <div className="flex gap-2 pt-1">

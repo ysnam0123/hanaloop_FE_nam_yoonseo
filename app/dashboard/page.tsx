@@ -116,7 +116,8 @@ const MOCK_DATA: Record<number, DashboardData> = {
 
 export default function DashboardPage() {
   const [year, setYear] = useState(2025);
-  const data = MOCK_DATA[year] ?? MOCK_DATA[2025];
+  const [data, setData] = useState<DashboardData | null>(null);
+  const dummyData = MOCK_DATA[year] ?? MOCK_DATA[2025];
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -128,21 +129,21 @@ export default function DashboardPage() {
       />
       <main className="flex-1 overflow-auto p-6 space-y-5">
         <SummaryCards
-          totalEmission={data.totalEmission}
-          monthlyChangeRate={data.monthlyChangeRate}
-          yearlyChangeRate={data.yearlyChangeRate}
-          insight={data.insight}
+          totalEmission={dummyData.totalEmission}
+          monthlyChangeRate={dummyData.monthlyChangeRate}
+          yearlyChangeRate={dummyData.yearlyChangeRate}
+          insight={dummyData.insight}
         />
         <div className="grid grid-cols-5 gap-5">
           <div className="col-span-3 bg-white rounded-xl shadow-sm p-5">
-            <MonthlyChart data={data.monthlyByType} />
+            <MonthlyChart data={dummyData.monthlyByType} />
           </div>
           <div className="col-span-2 bg-white rounded-xl shadow-sm p-5 flex flex-col">
-            <DonutChart data={data.typeRatio} />
+            <DonutChart data={dummyData.typeRatio} />
           </div>
         </div>
         <div className="bg-white rounded-xl shadow-sm p-5">
-          <ScopeLineChart data={data.scopeMonthly} />
+          <ScopeLineChart data={dummyData.scopeMonthly} />
         </div>
       </main>
     </div>

@@ -1,9 +1,134 @@
-import { type NextRequest } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
+import { calcEmission } from '@/lib/api/calculations';
 
-export async function GET(_request: NextRequest) {
-  return Response.json({ data: [] });
+// 활동 목록 조회
+export async function GET(request: NextRequest) {
+  const url = new URL(request.url);
+  const month = url.searchParams.get('month');
+  const type = url.searchParams.get('type');
+
+  let query = supabase
+    .from('activities')
+    .select('*, emission_factors(name, scope, unit)')
+    .order('date', { ascending: false });
+
+  if (month) {
+    query = query.gte('date', `${month}-01`).lte('date', `${month}-31`);
+  }
+  if (type) {
+    query = query.eq('type', type);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  const rows = data ?? [];
+
+  // 중복 정의: date + type + description 셋이 모두 같은 행이 2건 이상이면 중복
+  const keys: string[] = [];
+  const counts: number[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    const key = rows[i].date + '__' + rows[i].type + '__' + rows[i].description;
+    const idx = keys.indexOf(key);
+    if (idx === -1) {
+      keys.push(key);
+      counts.push(1);
+    } else {
+      counts[idx] = counts[idx] + 1;
+    }
+  }
+
+  const result: unknown[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const key = row.date + '__' + row.type + '__' + row.description;
+    const count = counts[keys.indexOf(key)];
+
+    result.push({
+      ...row,
+      emission: calcEmission(row.amount, row.factor_value_snapshot),
+      is_duplicate: count > 1,
+    });
+  }
+
+  return NextResponse.json(result);
 }
 
-export async function POST(_request: NextRequest) {
-  return Response.json({ ok: true });
+// 활동 목록 추가
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const date = body.date;
+  const type = body.type;
+  const description = body.description;
+  const amount = body.amount;
+  const unit = body.unit;
+  const factor_id = body.factor_id;
+
+  if (!factor_id) {
+    return NextResponse.json(
+      {
+        message:
+          '배출계수가 등록되지 않은 항목입니다. 배출계수 탭에서 먼저 등록해주세요.',
+      },
+      { status: 400 },
+    );
+  }
+
+  const factorRes = await supabase
+    .from('emission_factors')
+    .select('factor_value')
+    .eq('id', factor_id)
+    .single();
+
+  if (factorRes.error || !factorRes.data) {
+    return NextResponse.json(
+      { message: '배출계수를 찾을 수 없습니다.' },
+      { status: 404 },
+    );
+  }
+
+  const insertRes = await supabase
+    .from('activities')
+    .insert({
+      date: date,
+      type: type,
+      description: description,
+      amount: amount,
+      unit: unit,
+      factor_id: factor_id,
+      factor_value_snapshot: factorRes.data.factor_value,
+    })
+    .select('*, emission_factors(name, scope, unit)')
+    .single();
+
+  if (insertRes.error) {
+    return NextResponse.json(
+      { error: insertRes.error.message },
+      { status: 500 },
+    );
+  }
+
+  const inserted = insertRes.data;
+
+  // 중복 정의: date + type + description 셋이 모두 같은 행이 본인 포함 2건 이상이면 중복
+  const siblingsRes = await supabase
+    .from('activities')
+    .select('id')
+    .eq('date', inserted.date)
+    .eq('type', inserted.type)
+    .eq('description', inserted.description);
+
+  const siblingsCount = siblingsRes.data ? siblingsRes.data.length : 0;
+
+  return NextResponse.json(
+    {
+      ...inserted,
+      emission: calcEmission(inserted.amount, inserted.factor_value_snapshot),
+      is_duplicate: siblingsCount > 1,
+    },
+    { status: 201 },
+  );
 }
