@@ -52,9 +52,9 @@ export default function Header({
             onChange={(e) => onYearChange(Number(e.target.value))}
             className="pl-8 pr-6 py-1.5 text-xs border border-gray-200 rounded-lg text-gray-700 bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
           >
-            {[2023, 2024, 2025].map((y) => (
+            {[2024, 2025, 2026].map((y) => (
               <option key={y} value={y}>
-                {y} Year Filter
+                {y}년
               </option>
             ))}
           </select>

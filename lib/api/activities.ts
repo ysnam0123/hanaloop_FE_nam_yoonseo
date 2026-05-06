@@ -1,10 +1,12 @@
 import { Activity } from '@/types/activities';
 
 export async function getActivities(filters: {
+  year?: number;
   month?: string;
   type?: string;
 }): Promise<Activity[]> {
   const params = new URLSearchParams();
+  if (filters.year) params.set('year', String(filters.year));
   if (filters.month) params.set('month', filters.month);
   if (filters.type) params.set('type', filters.type);
   const res = await fetch(`/api/activities?${params}`);

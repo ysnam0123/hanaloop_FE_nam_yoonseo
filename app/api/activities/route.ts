@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { calcEmission } from '@/lib/api/calculations';
+import { calcEmission } from '@/lib/calculations';
 
 // 활동 목록 조회
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
+  const year = url.searchParams.get('year');
   const month = url.searchParams.get('month');
   const type = url.searchParams.get('type');
 
@@ -13,8 +14,11 @@ export async function GET(request: NextRequest) {
     .select('*, emission_factors(name, scope, unit)')
     .order('date', { ascending: false });
 
+  // month 가 있으면 month 우선 (이미 yyyy-mm 으로 year 포함), 없으면 year 단위로 필터
   if (month) {
     query = query.gte('date', `${month}-01`).lte('date', `${month}-31`);
+  } else if (year) {
+    query = query.gte('date', `${year}-01-01`).lte('date', `${year}-12-31`);
   }
   if (type) {
     query = query.eq('type', type);

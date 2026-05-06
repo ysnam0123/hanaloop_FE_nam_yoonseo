@@ -60,9 +60,16 @@ export default function ActivitiesPage() {
   );
 
   const { data: activities = [] } = useActivitiesQuery({
+    year,
     month: filters.month,
     type: filters.type,
   });
+
+  // 헤더 년도 변경 시 month 필터 리셋 (옛 년도의 month 값이 새 옵션에 없음)
+  function handleYearChange(y: number) {
+    setYear(y);
+    setFilters((prev) => ({ ...prev, month: '' }));
+  }
 
   // 등록/수정
   const saveMutation = useSaveActivityMutation({
@@ -115,7 +122,7 @@ export default function ActivitiesPage() {
         title="Activity Data"
         subtitle="활동 데이터 관리"
         year={year}
-        onYearChange={setYear}
+        onYearChange={handleYearChange}
       />
       <main className="flex-1 overflow-auto p-6 flex flex-col gap-5">
         <div className="flex items-start justify-between shrink-0">
@@ -130,6 +137,7 @@ export default function ActivitiesPage() {
         </div>
 
         <ActivityTable
+          year={year}
           data={activities}
           filters={filters}
           onFilterChange={(f) => setFilters((prev) => ({ ...prev, ...f }))}

@@ -14,6 +14,7 @@ const BADGE: Record<string, string> = {
 const PAGE_SIZE = 10;
 
 interface Props {
+  year: number;
   data: Activity[];
   filters: Filters;
   onFilterChange: (f: Partial<Filters>) => void;
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export default function ActivityTable({
+  year,
   data,
   filters,
   onFilterChange,
@@ -50,6 +52,7 @@ export default function ActivityTable({
   return (
     <div className="bg-white rounded-xl shadow-sm flex flex-col flex-1 min-h-0">
       <ActivityToolbar
+        year={year}
         filters={filters}
         onFilterChange={changeFilter}
         onCreate={onCreate}
