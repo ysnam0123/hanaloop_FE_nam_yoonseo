@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Activity } from '@/types/activities';
 import ActivityToolbar, { type Filters } from './ActivityToolbar';
-import Pagination from './Pagination';
+import Pagination from '@/components/common/Pagination';
 
 const BADGE: Record<string, string> = {
   전기: 'bg-sky-100 text-sky-700',
