@@ -6,8 +6,8 @@ interface Insight {
 
 interface Props {
   totalEmission: number;
-  monthlyChangeRate: number;
-  yearlyChangeRate: number;
+  monthlyChangeRate: number | null;
+  yearlyChangeRate: number | null;
   insight: Insight;
 }
 
@@ -17,8 +17,8 @@ export default function SummaryCards({
   yearlyChangeRate,
   insight,
 }: Props) {
-  const yearlyUp = yearlyChangeRate > 0;
-  const monthlyUp = monthlyChangeRate > 0;
+  const yearlyUp = yearlyChangeRate !== null && yearlyChangeRate > 0;
+  const monthlyUp = monthlyChangeRate !== null && monthlyChangeRate > 0;
 
   return (
     <div className="grid grid-cols-4 gap-5">
@@ -31,12 +31,18 @@ export default function SummaryCards({
           </span>
           <span className="text-sm text-gray-400">kgCO₂e</span>
         </div>
-        <p
-          className={`mt-3 text-xs font-medium ${yearlyUp ? 'text-red-500' : 'text-green-600'}`}
-        >
-          {yearlyUp ? '↑' : '↓'} 전년 대비{' '}
-          {Math.abs(yearlyChangeRate).toFixed(1)}% {yearlyUp ? '증가' : '감소'}
-        </p>
+        {yearlyChangeRate === null ? (
+          <p className="mt-3 text-xs font-medium text-gray-400">
+            전년 데이터 없음
+          </p>
+        ) : (
+          <p
+            className={`mt-3 text-xs font-medium ${yearlyUp ? 'text-red-500' : 'text-green-600'}`}
+          >
+            {yearlyUp ? '↑' : '↓'} 전년 대비{' '}
+            {Math.abs(yearlyChangeRate).toFixed(1)}% {yearlyUp ? '증가' : '감소'}
+          </p>
+        )}
       </div>
 
       {/* 전월 대비 증감률 */}
@@ -44,17 +50,32 @@ export default function SummaryCards({
         <p className="text-xs text-gray-400 font-medium mb-3">
           전월 대비 증감률
         </p>
-        <div className="flex items-baseline gap-1.5">
-          <span className="text-[2rem] font-bold text-gray-900 leading-none">
-            {monthlyChangeRate.toFixed(1)}
-          </span>
-          <span className="text-sm text-gray-400">%</span>
-        </div>
-        <p
-          className={`mt-3 text-xs font-medium ${monthlyUp ? 'text-red-500' : 'text-green-600'}`}
-        >
-          {monthlyUp ? '↑' : '↓'} 전월 대비 {monthlyUp ? '증가' : '감소'} 중
-        </p>
+        {monthlyChangeRate === null ? (
+          <>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[2rem] font-bold text-gray-300 leading-none">
+                —
+              </span>
+            </div>
+            <p className="mt-3 text-xs font-medium text-gray-400">
+              직전 월 데이터 없음
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[2rem] font-bold text-gray-900 leading-none">
+                {monthlyChangeRate.toFixed(1)}
+              </span>
+              <span className="text-sm text-gray-400">%</span>
+            </div>
+            <p
+              className={`mt-3 text-xs font-medium ${monthlyUp ? 'text-red-500' : 'text-green-600'}`}
+            >
+              {monthlyUp ? '↑' : '↓'} 전월 대비 {monthlyUp ? '증가' : '감소'} 중
+            </p>
+          </>
+        )}
       </div>
 
       {/* 감축 인사이트 */}

@@ -2,8 +2,8 @@ export interface DashboardData {
   totalEmission: number;
   prevMonthEmission: number;
   prevYearEmission: number;
-  monthlyChangeRate: number;
-  yearlyChangeRate: number;
+  monthlyChangeRate: number | null;
+  yearlyChangeRate: number | null;
   monthlyByType: {
     month: string;
     전기: number;

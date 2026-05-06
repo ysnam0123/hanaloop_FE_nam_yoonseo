@@ -11,14 +11,10 @@ function sumEmission(
   return total;
 }
 
-function changeRate(curr: number, prev: number) {
-  if (prev === 0) return 0;
+// 비교 대상이 없을 땐 null 반환 (UI에서 "데이터 없음" 표시용)
+function changeRate(curr: number, prev: number): number | null {
+  if (prev === 0) return null;
   return ((curr - prev) / prev) * 100;
-}
-
-function ym(year: number, monthIndex: number) {
-  const d = new Date(year, monthIndex, 1);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
 export async function GET(request: NextRequest) {
@@ -26,10 +22,6 @@ export async function GET(request: NextRequest) {
   const year = parseInt(
     url.searchParams.get('year') ?? String(new Date().getFullYear()),
   );
-
-  const now = new Date();
-  const currMonth = ym(year, now.getMonth());
-  const prevMonth = ym(year, now.getMonth() - 1);
 
   const { data: yearRows } = await supabase
     .from('activities')
@@ -45,26 +37,31 @@ export async function GET(request: NextRequest) {
     .gte('date', `${year - 1}-01-01`)
     .lte('date', `${year - 1}-12-31`);
 
-  const { data: currMonthRows } = await supabase
-    .from('activities')
-    .select('amount, factor_value_snapshot')
-    .gte('date', `${currMonth}-01`)
-    .lte('date', `${currMonth}-31`);
-
-  const { data: prevMonthRows } = await supabase
-    .from('activities')
-    .select('amount, factor_value_snapshot')
-    .gte('date', `${prevMonth}-01`)
-    .lte('date', `${prevMonth}-31`);
-
   const rows = yearRows ?? [];
 
   const totalEmission = sumEmission(rows);
   const prevYearEmission = sumEmission(prevYearRows ?? []);
-  const currMonthEmission = sumEmission(currMonthRows ?? []);
-  const prevMonthEmission = sumEmission(prevMonthRows ?? []);
-  const monthlyChangeRate = changeRate(currMonthEmission, prevMonthEmission);
   const yearlyChangeRate = changeRate(totalEmission, prevYearEmission);
+
+  // 데이터 안에서 가장 최근 월 + 그 직전 월 추출 (시스템 시각 무관)
+  const monthSet: string[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    const m = rows[i].date.slice(0, 7);
+    if (monthSet.indexOf(m) === -1) monthSet.push(m);
+  }
+  monthSet.sort();
+  const currMonthStr = monthSet[monthSet.length - 1] ?? '';
+  const prevMonthStr = monthSet[monthSet.length - 2] ?? '';
+
+  let currMonthEmission = 0;
+  let prevMonthEmission = 0;
+  for (let i = 0; i < rows.length; i++) {
+    const m = rows[i].date.slice(0, 7);
+    const e = rows[i].amount * rows[i].factor_value_snapshot;
+    if (m === currMonthStr) currMonthEmission += e;
+    else if (m === prevMonthStr) prevMonthEmission += e;
+  }
+  const monthlyChangeRate = changeRate(currMonthEmission, prevMonthEmission);
 
   const monthlyByType: {
     month: string;
