@@ -3,11 +3,6 @@
 import { useRef } from 'react';
 import { useToast } from '@/components/layout/Toast';
 
-const MONTHS = Array.from({ length: 12 }, (_, i) => {
-  const m = String(i + 1).padStart(2, '0');
-  return { label: `2025-${m}`, value: `2025-${m}` };
-});
-
 export interface Filters {
   month: string;
   type: string;
@@ -15,16 +10,22 @@ export interface Filters {
 }
 
 interface Props {
+  year: number;
   filters: Filters;
   onFilterChange: (f: Partial<Filters>) => void;
   onCreate: () => void;
 }
 
 export default function ActivityToolbar({
+  year,
   filters,
   onFilterChange,
   onCreate,
 }: Props) {
+  const months = Array.from({ length: 12 }, (_, i) => {
+    const m = String(i + 1).padStart(2, '0');
+    return { label: `${year}-${m}`, value: `${year}-${m}` };
+  });
   const { showToast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -45,7 +46,7 @@ export default function ActivityToolbar({
           className="text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           <option value="">전체 기간 (All)</option>
-          {MONTHS.map((m) => (
+          {months.map((m) => (
             <option key={m.value} value={m.value}>
               {m.label}
             </option>

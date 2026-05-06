@@ -1,4 +1,4 @@
-import { calcEmission, calcCarEquivalent } from '@/lib/api/calculations';
+import { calcEmission, calcCarEquivalent } from '@/lib/calculations';
 import { Factor } from '@/types/factor';
 
 interface Props {
