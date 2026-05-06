@@ -3,130 +3,66 @@
 import { useState } from 'react';
 import Header from '@/components/layout/Header';
 import FactorCards from '@/components/factors/FactorCards';
-import FactorTable from '@/components/factors/FactorTable';
-import FactorModal from '@/components/factors/FactorModal';
+import FactorTable from '@/components/factors/factorTable/FactorTable';
+import FactorModal from '@/components/factors/factorModal/FactorModal';
 import HistoryModal from '@/components/factors/HistoryModal';
 import { useToast } from '@/components/layout/Toast';
 import { Factor } from '@/types/factor';
-
-const MOCK_FACTORS: Factor[] = [
-  {
-    id: 'f-elec-3',
-    name: '한전 전력',
-    scope: 'Scope 2',
-    factor_value: 0.4781,
-    unit: 'kWh',
-    version: 'v2025.1',
-    valid_from: '2025-01-01',
-    is_active: true,
-  },
-  {
-    id: 'f-elec-2',
-    name: '한전 전력',
-    scope: 'Scope 2',
-    factor_value: 0.4594,
-    unit: 'kWh',
-    version: 'v2024.1',
-    valid_from: '2024-01-01',
-    is_active: false,
-  },
-  {
-    id: 'f-elec-1',
-    name: '한전 전력',
-    scope: 'Scope 2',
-    factor_value: 0.4567,
-    unit: 'kWh',
-    version: 'v2023.1',
-    valid_from: '2023-01-01',
-    is_active: false,
-  },
-  {
-    id: 'f-alu-2',
-    name: '알루미늄 원자재',
-    scope: 'Scope 3',
-    factor_value: 8.14,
-    unit: 'kg',
-    version: 'v2025.1',
-    valid_from: '2025-01-01',
-    is_active: true,
-  },
-  {
-    id: 'f-alu-1',
-    name: '알루미늄 원자재',
-    scope: 'Scope 3',
-    factor_value: 8.02,
-    unit: 'kg',
-    version: 'v2024.1',
-    valid_from: '2024-01-01',
-    is_active: false,
-  },
-  {
-    id: 'f-trans-2',
-    name: '화물 운송',
-    scope: 'Scope 3',
-    factor_value: 0.092,
-    unit: 'ton-km',
-    version: 'v2025.1',
-    valid_from: '2025-01-01',
-    is_active: true,
-  },
-  {
-    id: 'f-trans-1',
-    name: '화물 운송',
-    scope: 'Scope 3',
-    factor_value: 0.098,
-    unit: 'ton-km',
-    version: 'v2024.1',
-    valid_from: '2024-01-01',
-    is_active: false,
-  },
-  {
-    id: 'f-gas-1',
-    name: '도시가스',
-    scope: 'Scope 1',
-    factor_value: 2.176,
-    unit: 'm³',
-    version: 'v2025.1',
-    valid_from: '2025-01-01',
-    is_active: true,
-  },
-];
+import { useAllFactorsQuery } from '@/hooks/factors/useFactors';
+import { useSaveFactorMutation } from '@/hooks/factors/useSaveFactor';
+import { useActivateFactorMutation } from '@/hooks/factors/useActivateFactor';
+import { useDeactivateFactorMutation } from '@/hooks/factors/useDeActivateFactor';
 
 export default function FactorsPage() {
   const { showToast } = useToast();
-  const [year, setYear] = useState(2024);
+  const [year, setYear] = useState(2025);
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Factor | null>(null);
   const [historyTarget, setHistoryTarget] = useState<Factor | null>(null);
-  const [allFactors, setAllFactors] = useState<Factor[]>(MOCK_FACTORS);
+
+  // 배출계수 조회
+  const { data: allFactors = [] } = useAllFactorsQuery();
+
+  // 등록/수정
+  const saveMutation = useSaveFactorMutation({
+    onSuccess: (_data, isEdit) => {
+      showToast('success', isEdit ? '수정되었습니다.' : '저장되었습니다.');
+      setCreateOpen(false);
+      setEditTarget(null);
+    },
+    onError: () => showToast('error', '오류가 발생했습니다.'),
+  });
 
   function handleSave(body: Record<string, unknown>) {
-    void body;
-    showToast('success', editTarget ? '수정되었습니다.' : '저장되었습니다.');
-    setCreateOpen(false);
-    setEditTarget(null);
+    saveMutation.mutate({ body: body, id: editTarget?.id });
   }
+  // 활성화.
+  const activateMutation = useActivateFactorMutation({
+    onSuccess: (factor) => {
+      showToast(
+        'success',
+        `v${factor.version}이 현재 배출계수로 적용되었습니다.`,
+      );
+      setHistoryTarget(null);
+    },
+    onError: () => showToast('error', '적용 실패'),
+  });
 
   function handleActivate(factor: Factor) {
-    setAllFactors((prev) =>
-      prev.map((f) => {
-        if (f.id === factor.id) return { ...f, is_active: true };
-        if (f.name === factor.name && f.is_active)
-          return { ...f, is_active: false };
-        return f;
-      }),
-    );
-    showToast('success', `${factor.version}이 현재 배출계수로 적용되었습니다.`);
-    setHistoryTarget(null);
+    activateMutation.mutate(factor);
   }
+
+  // 비활성화. 서버에 PUT 후 캐시 무효화는 훅이 알아서 처리.
+  const deactivateMutation = useDeactivateFactorMutation({
+    onSuccess: (factor) => {
+      showToast('success', `${factor.name} 배출계수의 적용이 취소되었습니다.`);
+    },
+    onError: () => showToast('error', '비활성화 실패'),
+  });
 
   function handleDeactivate(factor: Factor) {
-    setAllFactors((prev) =>
-      prev.map((f) => (f.id === factor.id ? { ...f, is_active: false } : f)),
-    );
-    showToast('success', `${factor.name} 배출계수의 적용이 취소되었습니다.`);
+    deactivateMutation.mutate(factor);
   }
-
   const activeFactors = allFactors.filter((f) => f.is_active);
   const historyItems = historyTarget
     ? allFactors.filter((f) => f.name === historyTarget.name)
@@ -181,6 +117,7 @@ export default function FactorsPage() {
         <FactorTable factors={allFactors} onRowClick={setHistoryTarget} />
       </main>
 
+      {/* 배출계수 추가 모달  */}
       <FactorModal
         isOpen={createOpen || !!editTarget}
         mode={editTarget ? 'edit' : 'create'}
@@ -192,6 +129,7 @@ export default function FactorsPage() {
         }}
         onSave={handleSave}
       />
+      {/* 이력 모달창 */}
       {historyTarget && (
         <HistoryModal
           isOpen={!!historyTarget}

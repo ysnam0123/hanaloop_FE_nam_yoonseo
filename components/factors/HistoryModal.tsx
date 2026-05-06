@@ -1,12 +1,12 @@
 'use client';
 
+import { Factor } from '@/types/factor';
 import { useState } from 'react';
-import type { Factor } from '@/app/factors/page';
 
 const SCOPE_BADGE: Record<string, string> = {
-  'Scope 1': 'bg-red-100 text-red-700',
-  'Scope 2': 'bg-sky-100 text-sky-700',
-  'Scope 3': 'bg-violet-100 text-violet-700',
+  Scope1: 'bg-red-100 text-red-700',
+  Scope2: 'bg-sky-100 text-sky-700',
+  Scope3: 'bg-violet-100 text-violet-700',
 };
 
 interface Props {
@@ -42,7 +42,7 @@ export default function HistoryModal({
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+            className="text-gray-400 cursor-pointer hover:text-gray-600 text-lg leading-none"
           >
             ✕
           </button>
@@ -164,7 +164,7 @@ export default function HistoryModal({
         <div className="px-6 pb-6 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+            className="px-6 cursor-pointer py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
           >
             닫기
           </button>
