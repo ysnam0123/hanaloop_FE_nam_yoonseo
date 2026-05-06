@@ -99,6 +99,11 @@ yarn start
   **Excel 임포트**                                                                                                              
   <img width="800" height="399" alt="엑셀임포트" src="https://github.com/user-attachments/assets/7c11c94d-c8fa-4edf-99d9-5a26c400e6c1" />
   > 엑셀 파일을 업로드해 활동 데이터를 일괄 추가합니다.
+> 
+
+과제용 데이터
+[data.xlsx](https://github.com/user-attachments/files/27459437/data.xlsx)
+
                                                                                                                                 
   **수동 데이터 입력**
   <img width="800" height="402" alt="활동데이터 수동입력" src="https://github.com/user-attachments/assets/54282547-18f2-49f9-abc1-73645d3a222f" />
