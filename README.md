@@ -30,17 +30,18 @@ yarn start
 
 ### 스크린샷
 
-| 페이지                       | 화면                 |
-| ---------------------------- | -------------------- |
-| 대시보드                     | <img width="1915" height="955" alt="스크린샷 2026-05-07 오전 5 34 05" src="https://github.com/user-attachments/assets/d1a9699d-0554-4c83-94b7-9e04bffdfe3a" /> |
-| 활동 데이터                  |
-<img width="1911" height="953" alt="스크린샷 2026-05-07 오전 5 34 19" src="https://github.com/user-attachments/assets/210bc3d4-6fd0-49a1-a158-616ba7d63685" />
-<img width="1913" height="952" alt="스크린샷 2026-05-07 오전 5 34 36" src="https://github.com/user-attachments/assets/da438d79-94b2-4985-b814-5a5e1fe3de15" />
+#### 대시보드
+<img width="700" alt="대시보드" src="https://github.com/user-attachments/assets/d1a9699d-0554-4c83-94b7-9e04bffdfe3a" />
 
-|
-| 배출계수                     | _스크린샷 추가 예정_ |
-| 활동 입력 모달 (실시간 계산) | _스크린샷 추가 예정_ |
-| Excel 임포트                 | _스크린샷 추가 예정_ |
+#### 활동 데이터
+<img width="450" alt="활동 데이터 - 목록" src="https://github.com/user-attachments/assets/210bc3d4-6fd0-49a1-a158-616ba7d63685" />
+<img width="450" alt="활동 데이터 - 상세" src="https://github.com/user-attachments/assets/da438d79-94b2-4985-b814-5a5e1fe3de15" />
+
+#### 배출계수
+<img width="450" alt="배출계수 - 라이브러리" src="https://github.com/user-attachments/assets/9fed4098-5f98-4703-9945-1c954e25eb36" />
+<img width="450" alt="배출계수 - 빈 상태" src="https://github.com/user-attachments/assets/0e9f9856-ec2a-4468-a58c-78dad30dec18" />
+<img width="450" alt="배출계수 - 추가 모달" src="https://github.com/user-attachments/assets/86d5974c-2c6c-41c4-af5f-9b9fdda77495" />
+<img width="450" alt="배출계수 - 버전 이력" src="https://github.com/user-attachments/assets/5f280faf-ac54-4bdf-8991-72b715d20ca8" />
 
 ### 비디오
 
