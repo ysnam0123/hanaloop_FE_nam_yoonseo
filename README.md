@@ -37,7 +37,7 @@ yarn start
 #### 활동 데이터
 <img width="450" alt="활동 데이터 - 목록" src="https://github.com/user-attachments/assets/210bc3d4-6fd0-49a1-a158-616ba7d63685" />
 > 활동 데이터 화면
-<img width="450" alt="" src="https://github.com/user-attachments/assets/c630b0e1-d800-4586-9c09-4a7799e76fed" />
+<img width="250" alt="" src="https://github.com/user-attachments/assets/c630b0e1-d800-4586-9c09-4a7799e76fed" />
 > 활동 데이터 입력 모달창
 
 #### 배출계수
