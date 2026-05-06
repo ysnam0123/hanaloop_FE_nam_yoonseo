@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef } from 'react';
-import { useToast } from '@/components/layout/Toast';
 
 export interface Filters {
   month: string;
@@ -14,6 +13,7 @@ interface Props {
   filters: Filters;
   onFilterChange: (f: Partial<Filters>) => void;
   onCreate: () => void;
+  onImport: (file: File) => void;
 }
 
 export default function ActivityToolbar({
@@ -21,19 +21,19 @@ export default function ActivityToolbar({
   filters,
   onFilterChange,
   onCreate,
+  onImport,
 }: Props) {
   const months = Array.from({ length: 12 }, (_, i) => {
     const m = String(i + 1).padStart(2, '0');
     return { label: `${year}-${m}`, value: `${year}-${m}` };
   });
-  const { showToast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
 
   function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    showToast('warning', '임포트 기능은 추후 연동 예정입니다.');
-    e.target.value = '';
+    onImport(file);
+    e.target.value = ''; // 같은 파일 다시 고를 수 있도록 리셋
   }
 
   return (
