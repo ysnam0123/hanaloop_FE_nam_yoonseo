@@ -24,31 +24,87 @@ yarn start
 > Supabase URL/anon key는 `.env.local`에 포함되어 있습니다.
 > 평가용 프로젝트라 RLS(Row Level Security)는 비활성화 상태입니다.
 
----
+---   
+  ### 스크린샷                                                                                                                  
+                                                                                                               
+  #### 대시보드                                                                                                                 
+  <img width="800" alt="대시보드 홈" src="https://github.com/user-attachments/assets/7c8b88a9-c2a8-4ddf-8bda-8a146b00a1e0" />
+                                                                                                                                
+  > 대시보드 홈 화면 — 올해 총 배출량 / 전월 대비 / 감축 인사이트 / 월별·유형·Scope 차트                                        
+                                                                                                                                
+  #### 활동 데이터                                                                                                              
+  <img width="800" alt="활동 데이터 홈" src="https://github.com/user-attachments/assets/e04fcfe0-a65b-449e-9d3b-765b1f54204a" />
+  <img width="400" alt="수동 데이터 입력" src="https://github.com/user-attachments/assets/4b5a267d-c66c-4716-b9e4-3e1ee1514f4a" 
+  />                                                                                                                            
+  <img width="400" alt="데이터 수정" src="https://github.com/user-attachments/assets/ca8d271d-6f38-4b82-bfb7-561ea74ecba8" />   
+  <img width="450" alt="중복 데이터 모달창"                                                                                     
+  src="https://github.com/user-attachments/assets/1b18031a-e890-4f0d-8eef-5780898e4d3f" />                                      
+                                                                                                                                
+  > 활동 데이터 화면 — 입력 내역 테이블 + 총 배출량 / 중복 검사 카드                                                            
+                                                            
+  #### 배출계수                                                                                                                 
+  <img width="800" alt="배출 계수 홈" src="https://github.com/user-attachments/assets/fe7db4b6-f0dd-40bf-a8d5-47ac74ff22a1" />
+  <img width="450" alt="현재 배출 계수 수정"                                                                                    
+  src="https://github.com/user-attachments/assets/9bb7e526-8cd6-44d7-86a5-a2b62777c4bc" />                                      
+  <img width="450" alt="배출 계수 이력 모달창"                                                                                  
+  src="https://github.com/user-attachments/assets/e451ec75-2d75-4436-b738-82da8f5aeb3b" />                                      
+                                                            
+  > 배출계수 화면 — 현재 적용 중인 계수 카드 + 전체 이력 테이블                                                                 
+                                                            
+  ---    
+                                                                                                                                
+  ### 화면녹화 (GIF)                   
 
-## 데모
+  #### 대시보드
+  <img width="800" height="394" alt="대시보드" src="https://github.com/user-attachments/assets/fa9ab98d-d841-48f3-af13-f4ee0a82ef73" />
+  > 대시보드 홈 화면 — 차트 마우스 호버 시 툴팁 확인 가능
 
-### 스크린샷
+  #### 활동 데이터                                                                                                              
+   
+  **Excel 임포트**                                                                                                              
+  <img width="800" height="399" alt="엑셀임포트" src="https://github.com/user-attachments/assets/7c11c94d-c8fa-4edf-99d9-5a26c400e6c1" />
+  > 엑셀 파일을 업로드해 활동 데이터를 일괄 추가합니다.
+                                                                                                                                
+  **수동 데이터 입력**
+  <img width="800" height="402" alt="활동데이터 수동입력" src="https://github.com/user-attachments/assets/54282547-18f2-49f9-abc1-73645d3a222f" />
+  > 활동량을 입력하는 동안 예상 배출량과 승용차 km 환산이 실시간으로 갱신됩니다.
 
-#### 대시보드
-<img width="700" alt="대시보드" src="https://github.com/user-attachments/assets/d1a9699d-0554-4c83-94b7-9e04bffdfe3a" />
-> 대시보드 홈 화면
+  **입력 검증 / 에러 메시지**                                                                                                   
+  <img width="800" height="398" alt="활동데이터입력검증" src="https://github.com/user-attachments/assets/2a747afe-5a2a-4df4-85d7-cfdbd9662ab9" />
+  > 활동량 0/음수 입력 시 빨간 메시지로 안내합니다. 배출계수가 등록되지 않은 유형은 토스트로 알려주고 배출계수 탭으로 이동할 수 있습니다.    
+                                                                                                                                
+  **데이터 수정**
+  <img width="800" height="395" alt="활동데이터 수정" src="https://github.com/user-attachments/assets/1354cd7f-6d40-4861-a5ab-b4da8a52e2c3" />
+  > 기존 활동 데이터를 수정하면 배출량이 자동으로 재계산됩니다.                                                                 
+                                                                                                                                
+  **중복 데이터 병합**                                                                                                          
+  <img width="800" height="394" alt="중복합치기" src="https://github.com/user-attachments/assets/76a8a9ee-22c4-4080-8ebb-cdabaae2e3f0" />
+  > 날짜·유형·설명이 동일한 행이 ⚠️ 로 표시되며, 모달에서 일괄 병합/삭제할 수 있습니다.
+ 
+  **테이블 필터링**
+  <img width="800" height="394" alt="테이블 필터링" src="https://github.com/user-attachments/assets/59e5b8ce-548d-452d-baad-3441359edc64" />
+  > 기간(월) / 유형 / 검색어로 활동 데이터를 필터링할 수 있습니다.                                                            
+ 
 
-#### 활동 데이터
-<img width="450" alt="활동 데이터 - 목록" src="https://github.com/user-attachments/assets/210bc3d4-6fd0-49a1-a158-616ba7d63685" />
-> 활동 데이터 화면
-<img width="250" alt="" src="https://github.com/user-attachments/assets/c630b0e1-d800-4586-9c09-4a7799e76fed" />
-> 활동 데이터 입력 모달창
+  #### 배출계수
+                                                                                                                                
+  **배출계수 추가**                                                                                                             
+  <img width="800" height="397" alt="배출계수 추가" src="https://github.com/user-attachments/assets/8b9a8900-6668-4154-b962-54701375121b" />
+  > 새 항목 또는 기존 항목의 새 버전을 등록합니다. "바로 적용하기" 옵션으로 즉시 활성화 여부를 선택합니다.                      
 
-#### 배출계수
-<img width="450" alt="배출계수 - 라이브러리" src="https://github.com/user-attachments/assets/9fed4098-5f98-4703-9945-1c954e25eb36" />
-<img width="450" alt="배출계수 - 빈 상태" src="https://github.com/user-attachments/assets/0e9f9856-ec2a-4468-a58c-78dad30dec18" />
-<img width="450" alt="배출계수 - 추가 모달" src="https://github.com/user-attachments/assets/86d5974c-2c6c-41c4-af5f-9b9fdda77495" />
-<img width="450" alt="배출계수 - 버전 이력" src="https://github.com/user-attachments/assets/5f280faf-ac54-4bdf-8991-72b715d20ca8" />
-
-### 비디오
-
-_데모 영상 링크 추가 예정_
+  **입력 검증 / 에러 메시지**                                                                                                   
+  <img width="800" height="401" alt="배출계수입력검증" src="https://github.com/user-attachments/assets/fd73eb58-1a0c-400d-bea7-9e41cdf6691a" />
+  > 빈 값으로 저장 시 모든 필수 필드(항목명/Scope/단위/계수값/버전명/적용 시작일)에 빨간 메시지가 표시됩니다.
+      
+  **배출계수 적용 취소**
+  <img width="800" height="416" alt="배출계수적용취소" src="https://github.com/user-attachments/assets/4389d4ad-d7b1-4e1a-bee3-a0a657f65d0e" />
+  > 현재 적용 중인 계수를 비활성화합니다. 이후 활동 데이터엔 영향 없고, 과거 데이터는 박제된 계수로 유지됩니다.
+                                                                                                                                
+  **이력에서 다른 버전으로 적용**                                                                                               
+  <img width="800" height="409" alt="배출계수다시적용" src="https://github.com/user-attachments/assets/8bc48617-0b0b-4f97-8314-19a25d914bc9" />
+  > 이력 모달에서 과거 버전을 선택해 다시 활성화할 수 있습니다.                                                                 
+                                                                                                                                
+  ---  
 
 ---
 
@@ -91,7 +147,7 @@ _데모 영상 링크 추가 예정_
 ```
 사용자 입력 (활동/계수)
   ↓
-React Hook Form + 인라인 검증
+useState 폼 상태 + 인라인 검증
   ↓
 react-query mutation
   ↓
@@ -151,7 +207,7 @@ types/                         Activity, Factor, DashboardData, DuplicateGroup
 ### 기술 스택
 
 - **Framework**: Next.js 16 (App Router) + TypeScript
-- **DB / BaaS**: Supabase (PostgreSQL + Auth + RLS)
+- **DB**: Supabase (PostgreSQL)
 - **상태/캐시**: TanStack React Query
 - **차트**: Recharts
 - **스타일**: Tailwind CSS v4
