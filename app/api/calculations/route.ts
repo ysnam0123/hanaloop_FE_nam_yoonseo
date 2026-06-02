@@ -38,7 +38,6 @@ export async function GET(request: NextRequest) {
     .lte('date', `${year - 1}-12-31`);
 
   const rows = yearRows ?? [];
-
   const totalEmission = sumEmission(rows);
   const prevYearEmission = sumEmission(prevYearRows ?? []);
   const yearlyChangeRate = changeRate(totalEmission, prevYearEmission);
@@ -78,14 +77,15 @@ export async function GET(request: NextRequest) {
   const typeNames: string[] = [];
   const typeValues: number[] = [];
 
+  // 한번에 세 집계 채우기 - 막대,선,도넛 차트
   for (let i = 0; i < rows.length; i++) {
     const a = rows[i];
     const month = a.date.slice(0, 7);
     const emission = a.amount * a.factor_value_snapshot;
-
     const ef = a.emission_factors as unknown as { scope: string } | null;
     const scope = ef ? ef.scope : '';
 
+    // monthlyByType 누적
     let mIdx = -1;
     for (let j = 0; j < monthlyByType.length; j++) {
       if (monthlyByType[j].month === month) {
@@ -101,6 +101,7 @@ export async function GET(request: NextRequest) {
     else if (a.type === '원소재') monthlyByType[mIdx].원소재 += emission;
     else if (a.type === '운송') monthlyByType[mIdx].운송 += emission;
 
+    // scopeMonthly 누적
     let sIdx = -1;
     for (let j = 0; j < scopeMonthly.length; j++) {
       if (scopeMonthly[j].month === month) {
@@ -116,6 +117,7 @@ export async function GET(request: NextRequest) {
     else if (scope === 'Scope2') scopeMonthly[sIdx].Scope2 += emission;
     else if (scope === 'Scope3') scopeMonthly[sIdx].Scope3 += emission;
 
+    // typeNames/typeValues 누적 - 도넛 차트
     const tIdx = typeNames.indexOf(a.type);
     if (tIdx === -1) {
       typeNames.push(a.type);
@@ -125,9 +127,11 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // 월 정렬
   monthlyByType.sort((a, b) => a.month.localeCompare(b.month));
   scopeMonthly.sort((a, b) => a.month.localeCompare(b.month));
 
+  // 도넛 차트 데이터
   const typeRatio: { type: string; value: number; ratio: number }[] = [];
   for (let i = 0; i < typeNames.length; i++) {
     const value = typeValues[i];
@@ -135,10 +139,13 @@ export async function GET(request: NextRequest) {
     typeRatio.push({ type: typeNames[i], value: value, ratio: ratio });
   }
 
+  // 최대 비중 유형 찾기
   let topIdx = 0;
   for (let i = 1; i < typeRatio.length; i++) {
     if (typeRatio[i].ratio > typeRatio[topIdx].ratio) topIdx = i;
   }
+
+  // 인사이트 객체 생성
   const monthsCount = monthlyByType.length === 0 ? 1 : monthlyByType.length;
   const insight =
     typeRatio.length === 0

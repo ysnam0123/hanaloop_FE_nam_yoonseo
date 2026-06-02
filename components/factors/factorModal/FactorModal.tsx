@@ -22,19 +22,24 @@ export default function FactorModal({
   onClose,
   onSave,
 }: Props) {
-  // 기존 항목 선택 or 새 항목
+  // existing 일때
   const [inputMode, setInputMode] = useState<'existing' | 'new'>('existing');
+  // new 일때
   const [selectedName, setSelectedName] = useState('');
 
-  // 새 항목 직접 입력
-  const [newName, setNewName] = useState('');
   const [scope, setScope] = useState('Scope1');
+
+  // new 일때 단위
+  const [newName, setNewName] = useState('');
+  // existing 일때 단위 -> 자동 채움
   const [newUnit, setNewUnit] = useState('');
 
-  // 계수 정보
+  // 계수값
   const [factorValue, setFactorValue] = useState('');
   const [unit, setUnit] = useState('');
+  // 버전명
   const [version, setVersion] = useState('');
+  // 적용시작일
   const [validFrom, setValidFrom] = useState('');
 
   // 필드별 에러
@@ -83,7 +88,7 @@ export default function FactorModal({
     setErrors({});
   }, [isOpen, mode, data]);
 
-  // ─── NameSelector 핸들러 ────────────────────────────
+  // 기존 항목 클릭 시
   function handleSelectExisting(name: string) {
     setSelectedName(name);
     setInputMode('existing');
@@ -96,6 +101,7 @@ export default function FactorModal({
     }
   }
 
+  // 새 항목명 타이핑 시
   function handleNewNameChange(v: string) {
     setNewName(v);
     setInputMode('new');
@@ -103,6 +109,7 @@ export default function FactorModal({
     clearError('name');
   }
 
+  // 새 항목명 input focus 시
   function handleNewNameFocus() {
     setInputMode('new');
     setSelectedName('');
@@ -111,25 +118,29 @@ export default function FactorModal({
     setShowScopeDesc(false);
   }
 
+  // scope 버튼 클릭 시
   function handleScopeChange(s: string) {
     setScope(s);
     setShowScopeDesc(true);
     clearError('scope');
   }
 
-  // ─── FactorFields 핸들러 ────────────────────────────
+  // 계수값 입력
   function handleFactorValueChange(v: string) {
     setFactorValue(v);
     clearError('factor_value');
   }
+  // 새 단위 입력
   function handleNewUnitChange(v: string) {
     setNewUnit(v);
     clearError('unit');
   }
+  // 버전명 입력
   function handleVersionChange(v: string) {
     setVersion(v);
     clearError('version');
   }
+  // 적용 시작일 입력
   function handleValidFromChange(v: string) {
     setValidFrom(v);
     clearError('valid_from');

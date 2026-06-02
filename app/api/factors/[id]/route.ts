@@ -6,7 +6,6 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-
   const body = await request.json();
   const name = body.name;
   const scope = body.scope;
