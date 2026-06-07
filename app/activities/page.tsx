@@ -1,25 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Header from '@/components/layout/Header';
 import ActivityTable from '@/components/activities/table/ActivityTable';
 import ActivityModal from '@/components/activities/activityModal/ActivityModal';
 import DeleteModal from '@/components/activities/deleteModal/DeleteModal';
 import DuplicateModal from '@/components/activities/duplicateModal/DuplicateModal';
 import BottomStats from '@/components/activities/bottomStats/BottomStats';
+import QualityReview from '@/components/activities/quality/QualityReview';
 import { useToast } from '@/components/layout/Toast';
 import { Activity, DuplicateGroup } from '@/types/activities';
-import { Factor } from '@/types/factor';
 import { useActivitiesQuery } from '@/hooks/activities/useActivities';
 import { useSaveActivityMutation } from '@/hooks/activities/useSaveActivity';
 import { useDeleteActivityMutation } from '@/hooks/activities/useDeleteActivity';
 import { useImportActivitiesMutation } from '@/hooks/activities/useImportActivities';
 import { useAllFactorsQuery } from '@/hooks/factors/useFactors';
+import {
+  ActivityQualityStatus,
+  ActivityQualityIssue,
+  getActivityQuality,
+} from '@/lib/activityQuality';
+
+type DataTab = 'list' | 'quality';
 
 export default function ActivitiesPage() {
   const { showToast } = useToast();
   const [year, setYear] = useState(2025);
-  const [filters, setFilters] = useState({ month: '', type: '', search: '' });
+  const [filters, setFilters] = useState({
+    month: '',
+    site: '',
+    type: '',
+    search: '',
+    status: '',
+  });
+  const [activeTab, setActiveTab] = useState<DataTab>('list');
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Activity | null>(null);
@@ -31,8 +45,10 @@ export default function ActivitiesPage() {
   const { data: activities = [] } = useActivitiesQuery({
     year,
     month: filters.month,
+    site: filters.site,
     type: filters.type,
   });
+  const quality = useMemo(() => getActivityQuality(activities), [activities]);
 
   // 실제 DB의 활성 배출계수만 모달에 전달
   const { data: allFactors = [] } = useAllFactorsQuery();
@@ -100,20 +116,42 @@ export default function ActivitiesPage() {
       date: activity.date,
       type: activity.type,
       description: activity.description,
+      site: activity.site,
       items: activities.filter(
         (a) =>
           a.date === activity.date &&
+          a.site === activity.site &&
           a.type === activity.type &&
           a.description === activity.description,
       ),
     });
   }
 
+  function handleResolveQualityIssue(issue: ActivityQualityIssue) {
+    const activity = activities.find((a) => a.id === issue.activityId);
+    if (!activity) {
+      showToast('error', '관련 데이터를 찾을 수 없습니다.');
+      return;
+    }
+
+    if (issue.status === 'duplicate') {
+      openDuplicateGroup(activity);
+      return;
+    }
+
+    setEditTarget(activity);
+  }
+
+  function handleSelectQualityStatus(status: ActivityQualityStatus) {
+    setFilters((prev) => ({ ...prev, status }));
+    setActiveTab('list');
+  }
+
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <Header
-        title="Activity Data"
-        subtitle="활동 데이터 관리"
+        title="데이터 허브"
+        subtitle="활동 데이터 입력과 품질 검토"
         year={year}
         onYearChange={handleYearChange}
       />
@@ -121,30 +159,68 @@ export default function ActivitiesPage() {
         <div className="flex items-start justify-between shrink-0">
           <div>
             <h1 className="text-xl font-bold text-gray-900">
-              활동 데이터 내역
+              데이터 허브
             </h1>
             <p className="text-sm text-gray-400 mt-0.5">
-              사업장별 탄소 배출 활동 데이터를 기록하고 관리합니다.
+              활동 데이터를 입력하고 보고 전 품질 이슈를 함께 점검합니다.
             </p>
           </div>
         </div>
 
-        <ActivityTable
-          year={year}
-          data={activities}
-          filters={filters}
-          onFilterChange={(f) => setFilters((prev) => ({ ...prev, ...f }))}
-          onEdit={setEditTarget}
-          onDelete={setDeleteTarget}
-          onCreate={() => setCreateOpen(true)}
-          onDuplicateClick={openDuplicateGroup}
-          onImport={handleImport}
-        />
+        <div className="flex items-center gap-2 shrink-0">
+          {[
+            { id: 'list', label: '데이터 목록' },
+            {
+              id: 'quality',
+              label: `품질 검토 ${quality.summary.totalIssues > 0 ? quality.summary.totalIssues : ''}`,
+            },
+          ].map((tab) => {
+            const selected = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as DataTab)}
+                className={`h-9 rounded-lg px-4 text-sm font-bold transition-colors ${
+                  selected
+                    ? 'bg-[#0B1A2A] text-white'
+                    : 'bg-white text-gray-500 border border-gray-100 hover:text-gray-800'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
 
-        <BottomStats
-          data={activities}
-          onDuplicateClick={(g) => setDuplicateGroup(g)}
-        />
+        {activeTab === 'list' ? (
+          <>
+            <ActivityTable
+              year={year}
+              data={activities}
+              filters={filters}
+              onFilterChange={(f) =>
+                setFilters((prev) => ({ ...prev, ...f }))
+              }
+              onEdit={setEditTarget}
+              onDelete={setDeleteTarget}
+              onCreate={() => setCreateOpen(true)}
+              onDuplicateClick={openDuplicateGroup}
+              onImport={handleImport}
+              qualityStatusById={quality.statusById}
+            />
+
+            <BottomStats
+              data={activities}
+              onDuplicateClick={(g) => setDuplicateGroup(g)}
+            />
+          </>
+        ) : (
+          <QualityReview
+            quality={quality}
+            onResolveIssue={handleResolveQualityIssue}
+            onSelectStatus={handleSelectQualityStatus}
+          />
+        )}
       </main>
 
       {/* 수정 모달 */}

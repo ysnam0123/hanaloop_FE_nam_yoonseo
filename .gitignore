@@ -21,6 +21,7 @@
 # misc
 .DS_Store
 *.pem
+.env*.local
 
 # debug
 npm-debug.log*
@@ -38,3 +39,5 @@ next-env.d.ts
 # Claude Code
 CLAUDE.md
 **/CLAUDE.md
+
+/outputs/

@@ -10,6 +10,7 @@ export async function PUT(
 
   const body = await request.json();
   const date = body.date;
+  const site = body.site ?? '본사';
   const type = body.type;
   const description = body.description;
   const amount = body.amount;
@@ -44,6 +45,7 @@ export async function PUT(
     .from('activities')
     .update({
       date: date,
+      site: site,
       type: type,
       description: description,
       amount: amount,

@@ -29,26 +29,6 @@ export default function DuplicateModal({
   const { showToast } = useToast();
   const [checked, setChecked] = useState<Set<string>>(new Set());
 
-  if (!isOpen) return null;
-  const { date, type, description, items } = duplicateGroup;
-  const allChecked = checked.size === items.length;
-
-  function toggleAll() {
-    setChecked(allChecked ? new Set() : new Set(items.map((i) => i.id)));
-  }
-  function toggleOne(id: string) {
-    setChecked((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
-  const selected = items.filter((i) => checked.has(i.id));
-  const totalAmount = selected.reduce((s, i) => s + i.amount, 0);
-  const totalEmission = selected.reduce((s, i) => s + i.emission, 0);
-  const unit = items[0]?.unit ?? '';
-
   const mergeMutation = useMergeActivitiesMutation({
     onSuccess: (vars) => {
       if (vars.action === 'delete') {
@@ -61,6 +41,30 @@ export default function DuplicateModal({
     onError: (vars) =>
       showToast('error', vars.action === 'delete' ? '삭제 실패' : '합산 실패'),
   });
+
+  if (!isOpen) return null;
+  const { date, site, type, description, items } = duplicateGroup;
+  const allChecked = checked.size === items.length;
+
+  function toggleAll() {
+    setChecked(allChecked ? new Set() : new Set(items.map((i) => i.id)));
+  }
+  function toggleOne(id: string) {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  const selected = items.filter((i) => checked.has(i.id));
+  const totalAmount = selected.reduce((s, i) => s + i.amount, 0);
+  const totalEmission = selected.reduce((s, i) => s + i.emission, 0);
+  const unit = items[0]?.unit ?? '';
 
   function handleDelete() {
     const ids: string[] = [];
@@ -90,7 +94,7 @@ export default function DuplicateModal({
         </div>
         <div className="px-6 pb-4">
           <p className="text-sm font-semibold text-[#16A34A]">
-            {type} · {date} · &ldquo;{description}&rdquo; 중복된 데이터{' '}
+            {site} · {type} · {date} · &ldquo;{description}&rdquo; 중복된 데이터{' '}
             {items.length}건이 있습니다.
           </p>
           <p className="text-xs text-gray-400 mt-0.5">
@@ -111,7 +115,7 @@ export default function DuplicateModal({
                     className="rounded accent-green-600"
                   />
                 </th>
-                {['날짜', '유형', '설명', '활동량', '단위', '배출량'].map(
+                {['날짜', '사업장', '유형', '설명', '활동량', '단위', '배출량'].map(
                   (h) => (
                     <th
                       key={h}
@@ -136,6 +140,9 @@ export default function DuplicateModal({
                   </td>
                   <td className="py-2.5 pr-3 text-gray-700 whitespace-nowrap">
                     {item.date}
+                  </td>
+                  <td className="py-2.5 pr-3 text-gray-600 whitespace-nowrap">
+                    {item.site ?? '본사'}
                   </td>
                   <td className="py-2.5 pr-3">
                     <span

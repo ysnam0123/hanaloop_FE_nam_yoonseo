@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const year = url.searchParams.get('year');
   const month = url.searchParams.get('month');
+  const site = url.searchParams.get('site');
   const type = url.searchParams.get('type');
 
   let query = supabase
@@ -23,6 +24,9 @@ export async function GET(request: NextRequest) {
   if (type) {
     query = query.eq('type', type);
   }
+  if (site) {
+    query = query.eq('site', site);
+  }
 
   const { data, error } = await query;
   if (error) {
@@ -31,11 +35,18 @@ export async function GET(request: NextRequest) {
 
   const rows = data ?? [];
 
-  // 중복 정의: date + type + description 셋이 모두 같은 행이 2건 이상이면 중복
+  // 중복 정의: date + site + type + description 넷이 모두 같은 행이 2건 이상이면 중복
   const keys: string[] = [];
   const counts: number[] = [];
   for (let i = 0; i < rows.length; i++) {
-    const key = rows[i].date + '__' + rows[i].type + '__' + rows[i].description;
+    const key =
+      rows[i].date +
+      '__' +
+      rows[i].site +
+      '__' +
+      rows[i].type +
+      '__' +
+      rows[i].description;
     const idx = keys.indexOf(key);
     if (idx === -1) {
       keys.push(key);
@@ -48,7 +59,14 @@ export async function GET(request: NextRequest) {
   const result: unknown[] = [];
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    const key = row.date + '__' + row.type + '__' + row.description;
+    const key =
+      row.date +
+      '__' +
+      row.site +
+      '__' +
+      row.type +
+      '__' +
+      row.description;
     const count = counts[keys.indexOf(key)];
 
     result.push({
@@ -65,6 +83,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const body = await request.json();
   const date = body.date;
+  const site = body.site ?? '본사';
   const type = body.type;
   const description = body.description;
   const amount = body.amount;
@@ -98,6 +117,7 @@ export async function POST(request: NextRequest) {
     .from('activities')
     .insert({
       date: date,
+      site: site,
       type: type,
       description: description,
       amount: amount,
@@ -117,11 +137,12 @@ export async function POST(request: NextRequest) {
 
   const inserted = insertRes.data;
 
-  // 중복 정의: date + type + description 셋이 모두 같은 행이 본인 포함 2건 이상이면 중복
+  // 중복 정의: date + site + type + description 넷이 모두 같은 행이 본인 포함 2건 이상이면 중복
   const siblingsRes = await supabase
     .from('activities')
     .select('id')
     .eq('date', inserted.date)
+    .eq('site', inserted.site)
     .eq('type', inserted.type)
     .eq('description', inserted.description);
 

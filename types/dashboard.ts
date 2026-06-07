@@ -11,6 +11,7 @@ export interface DashboardData {
     운송: number;
   }[];
   typeRatio: { type: string; value: number; ratio: number }[];
+  siteRatio: { site: string; value: number; ratio: number }[];
   scopeMonthly: {
     month: string;
     Scope1: number;

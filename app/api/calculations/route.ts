@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   const { data: yearRows } = await supabase
     .from('activities')
     .select(
-      'date, type, amount, factor_value_snapshot, emission_factors(scope)',
+      'date, site, type, amount, factor_value_snapshot, emission_factors(scope)',
     )
     .gte('date', `${year}-01-01`)
     .lte('date', `${year}-12-31`);
@@ -76,6 +76,8 @@ export async function GET(request: NextRequest) {
   }[] = [];
   const typeNames: string[] = [];
   const typeValues: number[] = [];
+  const siteNames: string[] = [];
+  const siteValues: number[] = [];
 
   // 한번에 세 집계 채우기 - 막대,선,도넛 차트
   for (let i = 0; i < rows.length; i++) {
@@ -125,6 +127,16 @@ export async function GET(request: NextRequest) {
     } else {
       typeValues[tIdx] = typeValues[tIdx] + emission;
     }
+
+    // siteNames/siteValues 누적 - 사업장별 배출량
+    const site = a.site ?? '본사';
+    const siteIdx = siteNames.indexOf(site);
+    if (siteIdx === -1) {
+      siteNames.push(site);
+      siteValues.push(emission);
+    } else {
+      siteValues[siteIdx] = siteValues[siteIdx] + emission;
+    }
   }
 
   // 월 정렬
@@ -138,6 +150,14 @@ export async function GET(request: NextRequest) {
     const ratio = totalEmission > 0 ? (value / totalEmission) * 100 : 0;
     typeRatio.push({ type: typeNames[i], value: value, ratio: ratio });
   }
+
+  const siteRatio: { site: string; value: number; ratio: number }[] = [];
+  for (let i = 0; i < siteNames.length; i++) {
+    const value = siteValues[i];
+    const ratio = totalEmission > 0 ? (value / totalEmission) * 100 : 0;
+    siteRatio.push({ site: siteNames[i], value: value, ratio: ratio });
+  }
+  siteRatio.sort((a, b) => b.value - a.value);
 
   // 최대 비중 유형 찾기
   let topIdx = 0;
@@ -164,6 +184,7 @@ export async function GET(request: NextRequest) {
     yearlyChangeRate,
     monthlyByType,
     typeRatio,
+    siteRatio,
     scopeMonthly,
     insight,
   });

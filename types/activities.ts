@@ -1,6 +1,7 @@
 export type Activity = {
   id: string;
   date: string;
+  site: string;
   type: string;
   description: string;
   amount: number;
@@ -14,6 +15,7 @@ export type Activity = {
 
 export interface DuplicateGroup {
   date: string;
+  site: string;
   type: string;
   description: string;
   items: Activity[];

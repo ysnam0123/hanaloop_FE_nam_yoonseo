@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Header from '@/components/layout/Header';
 import FactorCards from '@/components/factors/FactorCards';
+import FactorOverview from '@/components/factors/FactorOverview';
 import FactorTable from '@/components/factors/factorTable/FactorTable';
 import FactorModal from '@/components/factors/factorModal/FactorModal';
 import HistoryModal from '@/components/factors/HistoryModal';
@@ -12,6 +13,8 @@ import { useAllFactorsQuery } from '@/hooks/factors/useFactors';
 import { useSaveFactorMutation } from '@/hooks/factors/useSaveFactor';
 import { useActivateFactorMutation } from '@/hooks/factors/useActivateFactor';
 import { useDeactivateFactorMutation } from '@/hooks/factors/useDeActivateFactor';
+import { TYPE_UNIT } from '@/components/activities/activityModal/TypeSelector';
+import { getFactorInsights } from '@/lib/factorInsights';
 
 export default function FactorsPage() {
   const { showToast } = useToast();
@@ -22,6 +25,10 @@ export default function FactorsPage() {
 
   // 배출계수 조회
   const { data: allFactors = [] } = useAllFactorsQuery();
+  const factorInsights = useMemo(
+    () => getFactorInsights(allFactors, TYPE_UNIT),
+    [allFactors],
+  );
 
   // 등록/수정
   const saveMutation = useSaveFactorMutation({
@@ -71,8 +78,8 @@ export default function FactorsPage() {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <Header
-        title="데이터 관리"
-        subtitle="배출계수 관리"
+        title="배출계수"
+        subtitle="계수 라이브러리와 적용 이력"
         year={year}
         onYearChange={setYear}
       />
@@ -86,8 +93,7 @@ export default function FactorsPage() {
               활동 데이터에 적용되는 배출계수를 관리합니다.
             </p>
             <p className="text-sm text-gray-400">
-              배출계수 변경 시 해당 시작일 이후 데이터의 배출량이 자동
-              재계산됩니다.
+              활동 입력에 사용할 배출계수와 버전 이력을 관리합니다.
             </p>
           </div>
           <button
@@ -108,6 +114,8 @@ export default function FactorsPage() {
             새 배출계수 추가
           </button>
         </div>
+
+        <FactorOverview insights={factorInsights} />
 
         <FactorCards
           factors={activeFactors}

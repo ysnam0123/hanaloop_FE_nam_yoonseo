@@ -6,6 +6,10 @@ import { Activity } from '@/types/activities';
 import { Factor } from '@/types/factor';
 import TypeSelector, { TYPE_UNIT } from './TypeSelector';
 import EmissionPreview from './EmissionPreview';
+import FactorSelector from './FactorSelector';
+import { isUnitCompatible } from '@/lib/factorInsights';
+
+const SITE_OPTIONS = ['본사', '김포공장', '부산물류센터'];
 
 interface Props {
   isOpen: boolean;
@@ -27,35 +31,47 @@ export default function ActivityModal({
   const { showToast } = useToast();
   const [type, setType] = useState('전기');
   const [date, setDate] = useState('');
+  const [site, setSite] = useState('본사');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
+  const [selectedFactorId, setSelectedFactorId] = useState('');
   const [amountError, setAmountError] = useState('');
+  const [factorError, setFactorError] = useState('');
 
   useEffect(() => {
     if (!isOpen) return;
     if (mode === 'edit' && data) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setType(data.type);
       setDate(data.date);
+      setSite(data.site ?? '본사');
       setDescription(data.description);
       setAmount(String(data.amount));
+      setSelectedFactorId(data.factor_id);
     } else {
       setType('전기');
       setDate(new Date().toISOString().split('T')[0]);
+      setSite('본사');
       setDescription('');
       setAmount('');
+      setSelectedFactorId('');
     }
     setAmountError('');
+    setFactorError('');
   }, [isOpen, mode, data]);
 
-  // unit 매칭: 'kWh' / 'kgCO₂e/kWh' 등 형식 차이 무시하고 부분 문자열로 비교
   const expectedUnit = TYPE_UNIT[type] ?? '';
-  const activeFactor = factors.find(
-    (f) =>
-      f.unit === expectedUnit ||
-      f.unit.includes(expectedUnit) ||
-      expectedUnit.includes(f.unit),
+  const candidateFactors = factors.filter((factor) =>
+    isUnitCompatible(factor.unit, expectedUnit),
   );
+  const activeFactor = candidateFactors.find((f) => f.id === selectedFactorId);
   const unit = expectedUnit;
+
+  function handleTypeChange(nextType: string) {
+    setType(nextType);
+    setSelectedFactorId('');
+    setFactorError('');
+  }
 
   function handleSave() {
     if (!amount || Number(amount) <= 0) {
@@ -63,14 +79,13 @@ export default function ActivityModal({
       return;
     }
     if (!activeFactor) {
-      showToast(
-        'error',
-        '이 유형의 배출계수가 없습니다. 배출계수 탭에서 먼저 등록해주세요.',
-      );
+      setFactorError('적용할 배출계수를 선택해주세요');
+      showToast('error', '적용할 배출계수를 선택해주세요.');
       return;
     }
     onSave({
       date,
+      site,
       type,
       description,
       amount: Number(amount),
@@ -100,11 +115,22 @@ export default function ActivityModal({
         <div className="px-6 pb-6 space-y-5">
           <TypeSelector
             type={type}
-            onTypeChange={setType}
-            hasActiveFactor={!!activeFactor}
+            onTypeChange={handleTypeChange}
+            hasActiveFactor={candidateFactors.length > 0}
           />
 
-          {/* 날짜 + 단위 */}
+          <FactorSelector
+            factors={candidateFactors}
+            selectedFactorId={selectedFactorId}
+            expectedUnit={expectedUnit}
+            error={factorError}
+            onSelect={(factorId) => {
+              setSelectedFactorId(factorId);
+              setFactorError('');
+            }}
+          />
+
+          {/* 날짜 + 사업장 */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
@@ -121,14 +147,32 @@ export default function ActivityModal({
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
-                단위
+                사업장
               </label>
-              <input
-                readOnly
-                value={unit}
-                className="w-full border border-gray-100 bg-gray-50 rounded-xl px-3 py-2.5 text-sm text-gray-500 cursor-not-allowed"
-              />
+              <select
+                value={site}
+                onChange={(e) => setSite(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                {SITE_OPTIONS.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
             </div>
+          </div>
+
+          {/* 단위 */}
+          <div>
+            <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
+              단위
+            </label>
+            <input
+              readOnly
+              value={unit}
+              className="w-full border border-gray-100 bg-gray-50 rounded-xl px-3 py-2.5 text-sm text-gray-500 cursor-not-allowed"
+            />
           </div>
 
           {/* 설명 */}

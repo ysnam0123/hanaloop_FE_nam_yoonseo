@@ -65,6 +65,7 @@ export default function FactorModal({
   useEffect(() => {
     if (!isOpen) return;
     if (mode === 'edit' && data) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedName(data.name);
       setScope(data.scope);
       setUnit(data.unit);

@@ -4,6 +4,11 @@ import { useState } from 'react';
 import { Activity } from '@/types/activities';
 import ActivityToolbar, { type Filters } from './ActivityToolbar';
 import Pagination from '@/components/common/Pagination';
+import {
+  ActivityQualityStatus,
+  QUALITY_STATUS_CLASS,
+  QUALITY_STATUS_LABEL,
+} from '@/lib/activityQuality';
 
 const BADGE: Record<string, string> = {
   전기: 'bg-sky-100 text-sky-700',
@@ -23,6 +28,7 @@ interface Props {
   onCreate: () => void;
   onDuplicateClick: (a: Activity) => void;
   onImport: (file: File) => void;
+  qualityStatusById?: Record<string, ActivityQualityStatus>;
 }
 
 export default function ActivityTable({
@@ -35,6 +41,7 @@ export default function ActivityTable({
   onCreate,
   onDuplicateClick,
   onImport,
+  qualityStatusById = {},
 }: Props) {
   const [page, setPage] = useState(1);
 
@@ -44,9 +51,14 @@ export default function ActivityTable({
   }
 
   const filtered = data.filter(
-    (a) =>
-      !filters.search ||
-      a.description.toLowerCase().includes(filters.search.toLowerCase()),
+    (a) => {
+      const status = qualityStatusById[a.id] ?? 'normal';
+      return (
+        (!filters.search ||
+          a.description.toLowerCase().includes(filters.search.toLowerCase())) &&
+        (!filters.status || filters.status === status)
+      );
+    },
   );
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const rows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -68,12 +80,14 @@ export default function ActivityTable({
             <tr className="border-b border-gray-100">
               {[
                 '날짜',
+                '사업장',
                 '유형',
                 '설명',
                 '활동량',
                 '단위',
                 '배출계수',
                 '배출량 (kgCO₂e)',
+                '상태',
                 '관리',
               ].map((h) => (
                 <th
@@ -89,7 +103,7 @@ export default function ActivityTable({
             {rows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={10}
                   className="px-4 py-10 text-center text-gray-400 text-sm"
                 >
                   데이터가 없습니다.
@@ -103,6 +117,9 @@ export default function ActivityTable({
                 >
                   <td className="px-4 py-3 text-gray-700 whitespace-nowrap">
                     {row.date}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                    {row.site ?? '본사'}
                   </td>
                   <td className="px-4 py-3">
                     <span
@@ -128,6 +145,18 @@ export default function ActivityTable({
                   </td>
                   <td className="px-4 py-3 font-semibold text-[#16A34A] whitespace-nowrap">
                     {row.emission.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {(() => {
+                      const status = qualityStatusById[row.id] ?? 'normal';
+                      return (
+                        <span
+                          className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-bold ${QUALITY_STATUS_CLASS[status]}`}
+                        >
+                          {QUALITY_STATUS_LABEL[status]}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">

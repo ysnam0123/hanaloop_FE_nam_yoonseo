@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
 
     // 헤더 고정이라 직접 접근
     const date = row['일자(원본)'] as string;
+    const site = (row['사업장'] as string) || '본사';
     const type = row['활동 유형'] as string;
     const description = row['설명'] as string;
     // 숫자로 다 전달되진 않는다.
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
       errors.push({
         row: i + 2,
         date: date,
+        site: site,
         type: type,
         description: description,
         amount: amount,
@@ -80,6 +82,7 @@ export async function POST(request: NextRequest) {
       .from('activities')
       .insert({
         date: date,
+        site: site,
         type: type,
         description: description,
         amount: amount,
@@ -94,6 +97,7 @@ export async function POST(request: NextRequest) {
       errors.push({
         row: i + 2,
         date: date,
+        site: site,
         type: type,
         description: description,
         amount: amount,

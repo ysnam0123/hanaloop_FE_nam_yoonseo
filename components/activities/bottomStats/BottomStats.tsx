@@ -14,7 +14,7 @@ function getDuplicateGroups(data: Activity[]): DuplicateGroup[] {
   for (let i = 0; i < data.length; i++) {
     const a = data[i];
     if (!a.is_duplicate) continue;
-    const key = a.date + '__' + a.type + '__' + a.description;
+    const key = a.date + '__' + a.site + '__' + a.type + '__' + a.description;
     const idx = keys.indexOf(key);
     if (idx === -1) {
       keys.push(key);
@@ -29,6 +29,7 @@ function getDuplicateGroups(data: Activity[]): DuplicateGroup[] {
     const items = groups[i];
     result.push({
       date: items[0].date,
+      site: items[0].site,
       type: items[0].type,
       description: items[0].description,
       items,

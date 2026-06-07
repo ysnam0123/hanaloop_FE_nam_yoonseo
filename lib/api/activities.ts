@@ -3,11 +3,13 @@ import { Activity } from '@/types/activities';
 export async function getActivities(filters: {
   year?: number;
   month?: string;
+  site?: string;
   type?: string;
 }): Promise<Activity[]> {
   const params = new URLSearchParams();
   if (filters.year) params.set('year', String(filters.year));
   if (filters.month) params.set('month', filters.month);
+  if (filters.site) params.set('site', filters.site);
   if (filters.type) params.set('type', filters.type);
   const res = await fetch(`/api/activities?${params}`);
   if (!res.ok) throw new Error('활동 조회 실패');

@@ -4,9 +4,13 @@ import { useRef } from 'react';
 
 export interface Filters {
   month: string;
+  site: string;
   type: string;
   search: string;
+  status: string;
 }
+
+const SITE_OPTIONS = ['본사', '김포공장', '부산물류센터'];
 
 interface Props {
   year: number;
@@ -66,6 +70,21 @@ export default function ActivityToolbar({
           <option value="운송">운송</option>
         </select>
       </div>
+      <div>
+        <p className="text-[10px] text-gray-400 font-semibold mb-1">SITE</p>
+        <select
+          value={filters.site}
+          onChange={(e) => onFilterChange({ site: e.target.value })}
+          className="text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+        >
+          <option value="">모든 사업장</option>
+          {SITE_OPTIONS.map((site) => (
+            <option key={site} value={site}>
+              {site}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="flex-1">
         <p className="text-[10px] text-gray-400 font-semibold mb-1 invisible">
           SEARCH
@@ -76,6 +95,21 @@ export default function ActivityToolbar({
           onChange={(e) => onFilterChange({ search: e.target.value })}
           className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-500"
         />
+      </div>
+      <div>
+        <p className="text-[10px] text-gray-400 font-semibold mb-1">STATUS</p>
+        <select
+          value={filters.status}
+          onChange={(e) => onFilterChange({ status: e.target.value })}
+          className="text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+        >
+          <option value="">모든 상태</option>
+          <option value="normal">정상</option>
+          <option value="duplicate">중복</option>
+          <option value="outlier">이상치</option>
+          <option value="missingFactor">계수 확인</option>
+          <option value="missingRequired">필수값 누락</option>
+        </select>
       </div>
       <div className="flex items-end gap-2 pb-0.5 mt-auto">
         <input

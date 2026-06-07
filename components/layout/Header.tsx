@@ -1,5 +1,10 @@
 'use client';
 
+import { useState } from 'react';
+import LoginModal from '@/components/auth/LoginModal';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { ROLE_LABEL } from '@/types/auth';
+
 interface HeaderProps {
   title: string;
   subtitle?: string;
@@ -13,29 +18,32 @@ export default function Header({
   year,
   onYearChange,
 }: HeaderProps) {
+  const { user, logout } = useAuth();
+  const [loginOpen, setLoginOpen] = useState(false);
+
   return (
-    <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 shrink-0">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm">
-        <span className="font-semibold text-gray-800">탄소관리 플랫폼</span>
-        <span className="text-gray-300">›</span>
-        <span className="text-gray-500">{title}</span>
-        {subtitle && (
-          <>
-            <span className="text-gray-300">›</span>
-            <span className="text-gray-500">{subtitle}</span>
-          </>
-        )}
+    <header className="h-18 bg-[#F7FCF3] border-b border-green-100 flex items-center justify-between px-6 shrink-0">
+      <div className="flex min-w-0 items-center gap-4">
+        <div className="text-[28px] font-black text-[#006B2B] whitespace-nowrap">
+          CarbonLoop
+        </div>
+        <span className="h-7 w-px bg-green-200" />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-gray-700 truncate">
+            {title}
+          </p>
+          {subtitle && (
+            <p className="text-xs text-gray-500 truncate">{subtitle}</p>
+          )}
+        </div>
       </div>
 
-      {/* Right controls */}
-      <div className="flex items-center gap-2">
-        {/* Year filter */}
+      <div className="flex items-center gap-4">
         <div className="relative flex items-center">
-          <span className="absolute left-2.5 pointer-events-none text-gray-400">
+          <span className="absolute left-3 pointer-events-none text-gray-500">
             <svg
-              width="14"
-              height="14"
+              width="15"
+              height="15"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -50,15 +58,15 @@ export default function Header({
           <select
             value={year}
             onChange={(e) => onYearChange(Number(e.target.value))}
-            className="pl-8 pr-6 py-1.5 text-xs border border-gray-200 rounded-lg text-gray-700 bg-white appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="h-9 rounded-xl border border-green-100 bg-white/70 pl-9 pr-8 text-sm font-semibold text-gray-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500"
           >
             {[2024, 2025, 2026].map((y) => (
               <option key={y} value={y}>
-                {y}년
+                FY {y}
               </option>
             ))}
           </select>
-          <span className="absolute right-2 pointer-events-none text-gray-400">
+          <span className="absolute right-3 pointer-events-none text-gray-400">
             <svg
               width="12"
               height="12"
@@ -73,7 +81,72 @@ export default function Header({
             </svg>
           </span>
         </div>
+
+        <button
+          title="일정"
+          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-gray-600 hover:bg-green-50 hover:text-[#006B2B]"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4M8 2v4M3 10h18" />
+          </svg>
+        </button>
+        <button
+          title="알림"
+          className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-gray-600 hover:bg-green-50 hover:text-[#006B2B]"
+        >
+          <span className="absolute right-2 top-1.5 h-2 w-2 rounded-full bg-red-600" />
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+            <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+          </svg>
+        </button>
+        {user ? (
+          <div className="flex items-center gap-2">
+            <div className="hidden text-right sm:block">
+              <p className="text-xs font-black text-gray-800">{user.name}</p>
+              <p className="text-[11px] font-semibold text-[#007A33]">
+                {ROLE_LABEL[user.role]}
+              </p>
+            </div>
+            <button
+              type="button"
+              title="로그아웃"
+              onClick={logout}
+              className="h-9 w-9 rounded-full bg-[#006B2B] text-white flex items-center justify-center text-xs font-bold"
+            >
+              {user.name.slice(0, 1)}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setLoginOpen(true)}
+            className="h-9 rounded-xl bg-[#006B2B] px-4 text-sm font-bold text-white hover:bg-green-700"
+          >
+            로그인
+          </button>
+        )}
       </div>
+      <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
     </header>
   );
 }
