@@ -16,7 +16,9 @@ export default function DuplicateCard({ groups, onView }: Props) {
       </div>
       {count > 0 ? (
         <>
-          <p className="text-2xl font-bold text-gray-900">중복 {count}건</p>
+          <p className="text-2xl font-bold text-gray-900">
+            중복 그룹 {count}건
+          </p>
           <button
             onClick={() => groups[0] && onView(groups[0])}
             className="mt-2 text-xs text-[#16A34A] font-semibold hover:underline"

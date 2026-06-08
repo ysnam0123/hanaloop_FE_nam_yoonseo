@@ -10,10 +10,12 @@ import TopSourcesTable from '@/components/dashboard/TopSourcesTable';
 import ActionRequiredPanel from '@/components/dashboard/ActionRequiredPanel';
 import GoalProgressCard from '@/components/dashboard/GoalProgressCard';
 import SiteEmissionPanel from '@/components/dashboard/SiteEmissionPanel';
+import ReductionActionPlanner from '@/components/dashboard/ReductionActionPlanner';
 import { useCalculationsQuery } from '@/hooks/dashboard/useCalculations';
 import { useActivitiesQuery } from '@/hooks/activities/useActivities';
 import { useGoalQuery } from '@/hooks/goals/useGoal';
 import { getActivityQuality } from '@/lib/activityQuality';
+import { useConfirmedOutliers } from '@/hooks/activities/useConfirmedOutliers';
 
 export default function DashboardPage() {
   const [year, setYear] = useState(2025);
@@ -21,7 +23,11 @@ export default function DashboardPage() {
   const { data: goal } = useGoalQuery(year);
   const { data: activities = [], isLoading: activitiesLoading } =
     useActivitiesQuery({ year });
-  const quality = useMemo(() => getActivityQuality(activities), [activities]);
+  const { confirmedOutlierIds } = useConfirmedOutliers();
+  const quality = useMemo(
+    () => getActivityQuality(activities, { confirmedOutlierIds }),
+    [activities, confirmedOutlierIds],
+  );
   const loading = isLoading || activitiesLoading;
 
   return (
@@ -44,6 +50,7 @@ export default function DashboardPage() {
               <GoalProgressCard goal={goal} currentEmission={data.totalEmission} />
               <SiteEmissionPanel data={data} />
             </div>
+            <ReductionActionPlanner data={data} quality={quality} />
             <div className="grid grid-cols-5 gap-5">
               <div className="col-span-3 bg-white rounded-xl shadow-sm p-5">
                 <MonthlyChart data={data.monthlyByType} />

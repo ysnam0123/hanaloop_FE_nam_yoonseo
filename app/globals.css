@@ -18,7 +18,41 @@ body {
   font-family: var(--font-geist), Arial, sans-serif;
 }
 
+button:not(:disabled),
+a[href],
+select:not(:disabled),
+input[type='checkbox']:not(:disabled),
+input[type='radio']:not(:disabled),
+input[type='file']::file-selector-button,
+[role='button']:not([aria-disabled='true']) {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+input:disabled,
+[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
 .recharts-wrapper *:focus {
   outline: none !important;
   box-shadow: none !important;
+}
+
+@media print {
+  @page {
+    margin: 16mm;
+  }
+
+  aside,
+  nav,
+  header,
+  .print-hidden {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+  }
 }

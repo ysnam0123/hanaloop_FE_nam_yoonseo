@@ -49,9 +49,6 @@ export default function LoginModal({ isOpen, onClose }: Props) {
           <div>
             <p className="text-xs font-black text-[#007A33]">CARBONLOOP</p>
             <h2 className="mt-1 text-lg font-black text-gray-950">로그인</h2>
-            <p className="mt-1 text-xs text-gray-500">
-              경영진과 실무진 계정으로 데모 화면을 전환합니다.
-            </p>
           </div>
           <button
             type="button"
@@ -83,12 +80,14 @@ export default function LoginModal({ isOpen, onClose }: Props) {
             />
           </label>
 
-          <div className="rounded-xl bg-green-50 px-3 py-2 text-xs text-green-800">
+          {/* <div className="rounded-xl bg-green-50 px-3 py-2 text-xs text-green-800">
             데모 계정: 경영진 <b>executive / 1111</b>, 실무진{' '}
             <b>operator / 1111</b>
-          </div>
+          </div> */}
 
-          {error && <p className="text-xs font-semibold text-red-500">{error}</p>}
+          {error && (
+            <p className="text-xs font-semibold text-red-500">{error}</p>
+          )}
 
           <button
             type="submit"

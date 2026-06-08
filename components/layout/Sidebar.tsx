@@ -117,7 +117,7 @@ export default function Sidebar({ onGoalSettings }: Props) {
   const canManageGoals = user?.role === 'executive';
 
   return (
-    <aside className="w-[72px] min-h-screen bg-[#0B1A2A] text-slate-300 flex flex-col shrink-0">
+    <aside className="w-[72px] min-h-screen bg-[#0B1A2A] text-slate-300 flex flex-col shrink-0 print:hidden">
       <div className="h-18 flex flex-col items-center justify-center gap-1 border-b border-white/10">
         <div className="w-9 h-9 rounded-xl bg-[#6EF28C] text-[#073B20] flex items-center justify-center shadow-sm">
           <svg
@@ -166,13 +166,13 @@ export default function Sidebar({ onGoalSettings }: Props) {
           <button
             type="button"
             onClick={onGoalSettings}
-            title="목표설정"
+            title="목표 설정"
             className="relative mx-2 flex h-14 w-[56px] cursor-pointer flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
           >
             <span>
               <GoalIcon />
             </span>
-            목표설정
+            목표 설정
           </button>
         )}
       </nav>

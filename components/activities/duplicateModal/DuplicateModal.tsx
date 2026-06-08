@@ -83,7 +83,7 @@ export default function DuplicateModal({
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl">
         <div className="flex items-center justify-between px-6 pt-6 pb-1">
           <h2 className="text-base font-bold text-gray-900">
-            중복 데이터 확인
+            중복 그룹 확인
           </h2>
           <button
             onClick={onClose}
@@ -94,7 +94,7 @@ export default function DuplicateModal({
         </div>
         <div className="px-6 pb-4">
           <p className="text-sm font-semibold text-[#16A34A]">
-            {site} · {type} · {date} · &ldquo;{description}&rdquo; 중복된 데이터{' '}
+            {site} · {type} · {date} · &ldquo;{description}&rdquo; 중복 행{' '}
             {items.length}건이 있습니다.
           </p>
           <p className="text-xs text-gray-400 mt-0.5">

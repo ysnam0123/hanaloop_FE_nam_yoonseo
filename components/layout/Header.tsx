@@ -62,7 +62,7 @@ export default function Header({
           >
             {[2024, 2025, 2026].map((y) => (
               <option key={y} value={y}>
-                FY {y}
+                {y}년
               </option>
             ))}
           </select>
@@ -82,43 +82,6 @@ export default function Header({
           </span>
         </div>
 
-        <button
-          title="일정"
-          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-gray-600 hover:bg-green-50 hover:text-[#006B2B]"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <rect x="3" y="4" width="18" height="18" rx="2" />
-            <path d="M16 2v4M8 2v4M3 10h18" />
-          </svg>
-        </button>
-        <button
-          title="알림"
-          className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl text-gray-600 hover:bg-green-50 hover:text-[#006B2B]"
-        >
-          <span className="absolute right-2 top-1.5 h-2 w-2 rounded-full bg-red-600" />
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-            <path d="M13.7 21a2 2 0 0 1-3.4 0" />
-          </svg>
-        </button>
         {user ? (
           <div className="flex items-center gap-2">
             <div className="hidden text-right sm:block">

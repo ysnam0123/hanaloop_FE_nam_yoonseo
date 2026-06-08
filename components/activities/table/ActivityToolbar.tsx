@@ -43,13 +43,13 @@ export default function ActivityToolbar({
   return (
     <div className="flex items-center gap-3 p-4 border-b border-gray-100 shrink-0">
       <div>
-        <p className="text-[10px] text-gray-400 font-semibold mb-1">MONTH</p>
+        <p className="text-[10px] text-gray-400 font-semibold mb-1">기간</p>
         <select
           value={filters.month}
           onChange={(e) => onFilterChange({ month: e.target.value })}
           className="text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
-          <option value="">전체 기간 (All)</option>
+          <option value="">전체 기간</option>
           {months.map((m) => (
             <option key={m.value} value={m.value}>
               {m.label}
@@ -58,7 +58,7 @@ export default function ActivityToolbar({
         </select>
       </div>
       <div>
-        <p className="text-[10px] text-gray-400 font-semibold mb-1">TYPE</p>
+        <p className="text-[10px] text-gray-400 font-semibold mb-1">유형</p>
         <select
           value={filters.type}
           onChange={(e) => onFilterChange({ type: e.target.value })}
@@ -71,7 +71,7 @@ export default function ActivityToolbar({
         </select>
       </div>
       <div>
-        <p className="text-[10px] text-gray-400 font-semibold mb-1">SITE</p>
+        <p className="text-[10px] text-gray-400 font-semibold mb-1">사업장</p>
         <select
           value={filters.site}
           onChange={(e) => onFilterChange({ site: e.target.value })}
@@ -87,7 +87,7 @@ export default function ActivityToolbar({
       </div>
       <div className="flex-1">
         <p className="text-[10px] text-gray-400 font-semibold mb-1 invisible">
-          SEARCH
+          검색
         </p>
         <input
           placeholder="설명 검색..."
@@ -97,7 +97,7 @@ export default function ActivityToolbar({
         />
       </div>
       <div>
-        <p className="text-[10px] text-gray-400 font-semibold mb-1">STATUS</p>
+        <p className="text-[10px] text-gray-400 font-semibold mb-1">상태</p>
         <select
           value={filters.status}
           onChange={(e) => onFilterChange({ status: e.target.value })}
@@ -106,8 +106,9 @@ export default function ActivityToolbar({
           <option value="">모든 상태</option>
           <option value="normal">정상</option>
           <option value="duplicate">중복</option>
+          <option value="factorMismatch">계수 불일치</option>
           <option value="outlier">이상치</option>
-          <option value="missingFactor">계수 확인</option>
+          <option value="missingFactor">계수 누락</option>
           <option value="missingRequired">필수값 누락</option>
         </select>
       </div>
@@ -135,7 +136,7 @@ export default function ActivityToolbar({
             <polyline points="17 8 12 3 7 8" />
             <line x1="12" y1="3" x2="12" y2="15" />
           </svg>
-          Excel 임포트
+          Excel 업로드
         </button>
         <button
           onClick={onCreate}
@@ -152,7 +153,7 @@ export default function ActivityToolbar({
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          새 데이터 입력
+          활동 데이터 추가
         </button>
       </div>
     </div>

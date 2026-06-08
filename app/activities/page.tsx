@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import Header from '@/components/layout/Header';
 import ActivityTable from '@/components/activities/table/ActivityTable';
 import ActivityModal from '@/components/activities/activityModal/ActivityModal';
@@ -15,6 +15,7 @@ import { useSaveActivityMutation } from '@/hooks/activities/useSaveActivity';
 import { useDeleteActivityMutation } from '@/hooks/activities/useDeleteActivity';
 import { useImportActivitiesMutation } from '@/hooks/activities/useImportActivities';
 import { useAllFactorsQuery } from '@/hooks/factors/useFactors';
+import { useConfirmedOutliers } from '@/hooks/activities/useConfirmedOutliers';
 import {
   ActivityQualityStatus,
   ActivityQualityIssue,
@@ -23,23 +24,76 @@ import {
 
 type DataTab = 'list' | 'quality';
 
+const QUALITY_STATUSES: ActivityQualityStatus[] = [
+  'normal',
+  'duplicate',
+  'factorMismatch',
+  'missingFactor',
+  'outlier',
+  'missingRequired',
+];
+
+function isDataTab(value: string | null): value is DataTab {
+  return value === 'list' || value === 'quality';
+}
+
+function isQualityStatus(value: string | null): value is ActivityQualityStatus {
+  return QUALITY_STATUSES.includes(value as ActivityQualityStatus);
+}
+
+function subscribeToLocationChange(onStoreChange: () => void) {
+  window.addEventListener('popstate', onStoreChange);
+
+  return () => {
+    window.removeEventListener('popstate', onStoreChange);
+  };
+}
+
+function getLocationSearchSnapshot() {
+  if (typeof window === 'undefined') return '';
+  return window.location.search;
+}
+
 export default function ActivitiesPage() {
   const { showToast } = useToast();
   const [year, setYear] = useState(2025);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState(() => ({
     month: '',
     site: '',
     type: '',
     search: '',
     status: '',
-  });
-  const [activeTab, setActiveTab] = useState<DataTab>('list');
+  }));
+  const [activeTabOverride, setActiveTabOverride] = useState<DataTab | null>(
+    null,
+  );
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Activity | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Activity | null>(null);
   const [duplicateGroup, setDuplicateGroup] = useState<DuplicateGroup | null>(
     null,
+  );
+  const locationSearch = useSyncExternalStore(
+    subscribeToLocationChange,
+    getLocationSearchSnapshot,
+    () => '',
+  );
+  const searchParams = useMemo(
+    () => new URLSearchParams(locationSearch),
+    [locationSearch],
+  );
+  const tabParam = searchParams.get('tab');
+  const statusParam = searchParams.get('status');
+  const urlTab = isDataTab(tabParam) ? tabParam : 'list';
+  const urlStatus = isQualityStatus(statusParam) ? statusParam : '';
+  const activeTab = activeTabOverride ?? urlTab;
+  const effectiveFilters = useMemo(
+    () => ({
+      ...filters,
+      status: filters.status || urlStatus,
+    }),
+    [filters, urlStatus],
   );
 
   const { data: activities = [] } = useActivitiesQuery({
@@ -48,7 +102,11 @@ export default function ActivitiesPage() {
     site: filters.site,
     type: filters.type,
   });
-  const quality = useMemo(() => getActivityQuality(activities), [activities]);
+  const { confirmedOutlierIds, confirmOutlier } = useConfirmedOutliers();
+  const quality = useMemo(
+    () => getActivityQuality(activities, { confirmedOutlierIds }),
+    [activities, confirmedOutlierIds],
+  );
 
   // 실제 DB의 활성 배출계수만 모달에 전달
   const { data: allFactors = [] } = useAllFactorsQuery();
@@ -91,7 +149,7 @@ export default function ActivitiesPage() {
     deleteMutation.mutate(deleteTarget.id);
   }
 
-  // Excel 임포트
+  // Excel 업로드
   const importMutation = useImportActivitiesMutation({
     onSuccess: (result) => {
       const failed = result.errors.length;
@@ -142,9 +200,14 @@ export default function ActivitiesPage() {
     setEditTarget(activity);
   }
 
+  function handleConfirmOutlier(issue: ActivityQualityIssue) {
+    confirmOutlier(issue.activityId);
+    showToast('success', '이상치 후보를 정상 데이터로 확인했습니다.');
+  }
+
   function handleSelectQualityStatus(status: ActivityQualityStatus) {
     setFilters((prev) => ({ ...prev, status }));
-    setActiveTab('list');
+    setActiveTabOverride('list');
   }
 
   return (
@@ -179,7 +242,7 @@ export default function ActivitiesPage() {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as DataTab)}
+                onClick={() => setActiveTabOverride(tab.id as DataTab)}
                 className={`h-9 rounded-lg px-4 text-sm font-bold transition-colors ${
                   selected
                     ? 'bg-[#0B1A2A] text-white'
@@ -197,7 +260,7 @@ export default function ActivitiesPage() {
             <ActivityTable
               year={year}
               data={activities}
-              filters={filters}
+              filters={effectiveFilters}
               onFilterChange={(f) =>
                 setFilters((prev) => ({ ...prev, ...f }))
               }
@@ -218,6 +281,7 @@ export default function ActivitiesPage() {
           <QualityReview
             quality={quality}
             onResolveIssue={handleResolveQualityIssue}
+            onConfirmOutlier={handleConfirmOutlier}
             onSelectStatus={handleSelectQualityStatus}
           />
         )}

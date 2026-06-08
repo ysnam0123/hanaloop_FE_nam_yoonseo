@@ -78,6 +78,10 @@ export async function GET(request: NextRequest) {
   const typeValues: number[] = [];
   const siteNames: string[] = [];
   const siteValues: number[] = [];
+  const comboKeys: string[] = [];
+  const comboSites: string[] = [];
+  const comboTypes: string[] = [];
+  const comboValues: number[] = [];
 
   // 한번에 세 집계 채우기 - 막대,선,도넛 차트
   for (let i = 0; i < rows.length; i++) {
@@ -137,6 +141,18 @@ export async function GET(request: NextRequest) {
     } else {
       siteValues[siteIdx] = siteValues[siteIdx] + emission;
     }
+
+    // site + type 조합 누적 - 실제 감축 액션 단위
+    const comboKey = `${site}__${a.type}`;
+    const comboIdx = comboKeys.indexOf(comboKey);
+    if (comboIdx === -1) {
+      comboKeys.push(comboKey);
+      comboSites.push(site);
+      comboTypes.push(a.type);
+      comboValues.push(emission);
+    } else {
+      comboValues[comboIdx] = comboValues[comboIdx] + emission;
+    }
   }
 
   // 월 정렬
@@ -159,21 +175,26 @@ export async function GET(request: NextRequest) {
   }
   siteRatio.sort((a, b) => b.value - a.value);
 
-  // 최대 비중 유형 찾기
-  let topIdx = 0;
-  for (let i = 1; i < typeRatio.length; i++) {
-    if (typeRatio[i].ratio > typeRatio[topIdx].ratio) topIdx = i;
+  // 최대 비중 사업장+유형 조합 찾기
+  let topComboIdx = 0;
+  for (let i = 1; i < comboValues.length; i++) {
+    if (comboValues[i] > comboValues[topComboIdx]) topComboIdx = i;
   }
 
   // 인사이트 객체 생성
   const monthsCount = monthlyByType.length === 0 ? 1 : monthlyByType.length;
   const insight =
-    typeRatio.length === 0
-      ? { type: '', ratio: 0, saving: 0 }
+    comboValues.length === 0
+      ? { type: '', site: '', label: '', ratio: 0, saving: 0 }
       : {
-          type: typeRatio[topIdx].type,
-          ratio: typeRatio[topIdx].ratio,
-          saving: (typeRatio[topIdx].value / monthsCount) * 0.1,
+          type: comboTypes[topComboIdx],
+          site: comboSites[topComboIdx],
+          label: `${comboSites[topComboIdx]} ${comboTypes[topComboIdx]}`,
+          ratio:
+            totalEmission > 0
+              ? (comboValues[topComboIdx] / totalEmission) * 100
+              : 0,
+          saving: (comboValues[topComboIdx] / monthsCount) * 0.1,
         };
 
   return NextResponse.json({

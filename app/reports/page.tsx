@@ -2,14 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import Header from '@/components/layout/Header';
+import { useToast } from '@/components/layout/Toast';
 import { useCalculationsQuery } from '@/hooks/dashboard/useCalculations';
 import { useActivitiesQuery } from '@/hooks/activities/useActivities';
 import { useGoalQuery } from '@/hooks/goals/useGoal';
 import { getActivityQuality } from '@/lib/activityQuality';
-import {
-  getMonthOptions,
-  getReportActivitySummary,
-} from '@/lib/reportSummary';
+import { useConfirmedOutliers } from '@/hooks/activities/useConfirmedOutliers';
+import { getMonthOptions, getReportActivitySummary } from '@/lib/reportSummary';
 
 type ReportType = 'annual' | 'monthly';
 
@@ -18,10 +17,47 @@ function formatChange(rate: number | null | undefined) {
   return `${rate > 0 ? '+' : ''}${rate.toFixed(1)}%`;
 }
 
+function csvCell(value: string | number | null | undefined) {
+  const text = String(value ?? '');
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function getInitialReportState() {
+  if (typeof window === 'undefined') {
+    return { year: 2025, reportType: 'annual' as ReportType, month: '2025-05' };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const yearParam = Number(params.get('year'));
+  const reportTypeParam = params.get('reportType');
+  const monthParam = params.get('month');
+  const initialYear = [2024, 2025, 2026].includes(yearParam)
+    ? yearParam
+    : 2025;
+  const initialReportType: ReportType =
+    reportTypeParam === 'monthly' || reportTypeParam === 'annual'
+      ? reportTypeParam
+      : 'annual';
+  const initialMonth =
+    monthParam && /^\d{4}-\d{2}$/.test(monthParam)
+      ? monthParam
+      : `${initialYear}-05`;
+
+  return {
+    year: initialYear,
+    reportType: initialReportType,
+    month: initialMonth,
+  };
+}
+
 export default function ReportsPage() {
-  const [year, setYear] = useState(2025);
-  const [reportType, setReportType] = useState<ReportType>('annual');
-  const [month, setMonth] = useState(`${year}-05`);
+  const { showToast } = useToast();
+  const [initialReportState] = useState(getInitialReportState);
+  const [year, setYear] = useState(initialReportState.year);
+  const [reportType, setReportType] = useState<ReportType>(
+    initialReportState.reportType,
+  );
+  const [month, setMonth] = useState(initialReportState.month);
 
   const monthOptions = getMonthOptions(year);
   const selectedMonth =
@@ -36,8 +72,12 @@ export default function ReportsPage() {
   const { data: goal } = useGoalQuery(year);
   const { data: activities = [], isLoading: activitiesLoading } =
     useActivitiesQuery(activityFilters);
+  const { confirmedOutlierIds } = useConfirmedOutliers();
 
-  const quality = useMemo(() => getActivityQuality(activities), [activities]);
+  const quality = useMemo(
+    () => getActivityQuality(activities, { confirmedOutlierIds }),
+    [activities, confirmedOutlierIds],
+  );
   const activitySummary = useMemo(
     () => getReportActivitySummary(activities),
     [activities],
@@ -96,17 +136,104 @@ export default function ReportsPage() {
     setMonth(`${nextYear}-05`);
   }
 
+  function handleDownloadCsv() {
+    const rows = [
+      ['구분', '항목', '값', '비고'],
+      ['보고서', '제목', title, ''],
+      ['보고서', '기간', period, ''],
+      ['요약', '총 배출량', `${(totalEmission / 1000).toFixed(2)} tCO2e`, ''],
+      ['요약', isAnnual ? '전년 대비' : '전월 대비', isAnnual ? formatChange(annualData?.yearlyChangeRate) : formatChange(annualData?.monthlyChangeRate), ''],
+      ['요약', '데이터 건수', activities.length, ''],
+      ['요약', '품질 점수', `${quality.summary.score}점`, ''],
+      ['목표', '목표 배출량', goal ? `${(goal.target_emission / 1000).toFixed(2)} tCO2e` : '목표 없음', ''],
+      ['목표', '목표 대비 차이', targetGap === null ? '목표 없음' : `${(targetGap / 1000).toFixed(2)} tCO2e`, ''],
+      [],
+      ['Scope별 배출량', 'Scope', '배출량(tCO2e)', '비중(%)'],
+      ...scopeSummary.map((scope) => [
+        'Scope별 배출량',
+        scope.scope.replace('Scope', 'Scope '),
+        (scope.value / 1000).toFixed(2),
+        scope.ratio.toFixed(1),
+      ]),
+      [],
+      ['활동별 배출량', '활동 유형', '배출량(tCO2e)', '비중(%)'],
+      ...typeSummary.map((item) => [
+        '활동별 배출량',
+        item.type,
+        (item.value / 1000).toFixed(2),
+        item.ratio.toFixed(1),
+      ]),
+      [],
+      ['사업장별 배출량', '사업장', '배출량(tCO2e)', '비중(%)'],
+      ...siteSummary.map((site) => [
+        '사업장별 배출량',
+        site.site,
+        (site.value / 1000).toFixed(2),
+        site.ratio.toFixed(1),
+      ]),
+      [],
+      ['데이터 품질', '중복 행', quality.summary.duplicates, '건'],
+      ['데이터 품질', '계수 불일치', quality.summary.factorMismatches, '건'],
+      ['데이터 품질', '계수 누락', quality.summary.missingFactors, '건'],
+      ['데이터 품질', '이상치 후보', quality.summary.outliers, '건'],
+      ['데이터 품질', '필수값 누락', quality.summary.missingRequired, '건'],
+    ];
+
+    const csv = `\uFEFF${rows
+      .map((row) => row.map((cell) => csvCell(cell)).join(','))
+      .join('\n')}`;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `carbonloop-report-${year}-${isAnnual ? 'annual' : selectedMonth}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('success', 'CSV 파일을 다운로드했습니다.');
+  }
+
+  function handleExportPdf() {
+    showToast('success', '인쇄 대화상자에서 PDF로 저장을 선택하세요.');
+    window.print();
+  }
+
+  async function handleCopyShareLink() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('year', String(year));
+    url.searchParams.set('reportType', reportType);
+    if (reportType === 'monthly') {
+      url.searchParams.set('month', selectedMonth);
+    } else {
+      url.searchParams.delete('month');
+    }
+
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      showToast('success', '공유 링크를 복사했습니다.');
+    } catch {
+      showToast('error', '공유 링크 복사에 실패했습니다.');
+    }
+  }
+
+  const reportActions = [
+    { label: 'CSV 다운로드', onClick: handleDownloadCsv },
+    { label: 'PDF 내보내기', onClick: handleExportPdf },
+    { label: '공유 링크 복사', onClick: handleCopyShareLink },
+  ];
+
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <Header
-        title="보고서"
-        subtitle="월간·연간 보고서 미리보기"
-        year={year}
-        onYearChange={handleYearChange}
-      />
-      <main className="flex-1 overflow-auto bg-[#F7FCF3] p-6">
-        <div className="grid grid-cols-[320px_minmax(0,1fr)] gap-5">
-          <aside className="space-y-4">
+      <div className="print:hidden">
+        <Header
+          title="보고서"
+          subtitle="월간·연간 보고서 미리보기"
+          year={year}
+          onYearChange={handleYearChange}
+        />
+      </div>
+      <main className="flex-1 overflow-auto bg-[#F7FCF3] p-6 print:overflow-visible print:bg-white print:p-0">
+        <div className="grid grid-cols-[320px_minmax(0,1fr)] gap-5 print:block">
+          <aside className="space-y-4 print:hidden">
             <section className="rounded-xl border border-green-100 bg-white p-5 shadow-sm">
               <h1 className="text-base font-bold text-gray-900">보고서 설정</h1>
 
@@ -136,7 +263,9 @@ export default function ReportsPage() {
                   </span>
                   <select
                     value={year}
-                    onChange={(event) => handleYearChange(Number(event.target.value))}
+                    onChange={(event) =>
+                      handleYearChange(Number(event.target.value))
+                    }
                     className="mt-1.5 h-10 w-full rounded-lg border border-green-100 bg-[#F7FCF3] px-3 text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
                     {[2024, 2025, 2026].map((item) => (
@@ -202,20 +331,20 @@ export default function ReportsPage() {
             </section>
 
             <section className="space-y-2">
-              {['CSV 다운로드', 'PDF 내보내기', '보고서 인쇄', '공유 링크 복사'].map(
-                (action) => (
-                  <button
-                    key={action}
-                    className="h-10 w-full rounded-lg border border-green-100 bg-white text-sm font-semibold text-gray-700 hover:bg-green-50"
-                  >
-                    {action}
-                  </button>
-                ),
-              )}
+              {reportActions.map((action) => (
+                <button
+                  key={action.label}
+                  type="button"
+                  onClick={action.onClick}
+                  className="h-10 w-full rounded-lg border border-green-100 bg-white text-sm font-semibold text-gray-700 hover:bg-green-50"
+                >
+                  {action.label}
+                </button>
+              ))}
             </section>
           </aside>
 
-          <section className="min-h-[820px] rounded-xl border border-green-100 bg-white p-8 shadow-sm">
+          <section className="min-h-[820px] rounded-xl border border-green-100 bg-white p-8 shadow-sm print:min-h-0 print:rounded-none print:border-0 print:p-8 print:shadow-none">
             <div className="flex items-start justify-between border-b border-gray-200 pb-6">
               <div>
                 <p className="text-xs font-black text-[#007A33]">
@@ -224,7 +353,9 @@ export default function ReportsPage() {
                 <h2 className="mt-2 text-3xl font-black text-gray-950">
                   {title}
                 </h2>
-                <p className="mt-2 text-sm text-gray-500">보고 기간: {period}</p>
+                <p className="mt-2 text-sm text-gray-500">
+                  보고 기간: {period}
+                </p>
               </div>
               <div className="rounded-lg border border-green-100 bg-[#F7FCF3] px-5 py-4 text-right">
                 <p className="text-xs text-gray-500">보고서 ID</p>
@@ -268,7 +399,7 @@ export default function ReportsPage() {
 
                 <section className="mt-6 rounded-lg border border-green-100 bg-green-50 p-5">
                   <h3 className="text-base font-black text-[#007A33]">
-                    Executive Summary
+                    핵심 요약
                   </h3>
                   <p className="mt-3 text-sm leading-relaxed text-gray-700">
                     {title}의 총 배출량은 {(totalEmission / 1000).toFixed(1)}{' '}
@@ -285,15 +416,15 @@ export default function ReportsPage() {
                   <p className="mt-2 text-sm leading-relaxed text-gray-700">
                     {goal
                       ? targetGap !== null && targetGap > 0
-                        ? `설정된 목표 ${(
-                            goal.target_emission / 1000
-                          ).toFixed(1)} tCO₂e 대비 ${(
-                            targetGap / 1000
-                          ).toFixed(1)} tCO₂e 추가 감축이 필요합니다.`
-                        : `설정된 목표 ${(
-                            goal.target_emission / 1000
-                          ).toFixed(1)} tCO₂e 이내로 관리되고 있습니다.`
-                      : '목표설정이 아직 없어 목표 대비 평가는 제외되었습니다.'}
+                        ? `설정된 목표 ${(goal.target_emission / 1000).toFixed(
+                            1,
+                          )} tCO₂e 대비 ${(targetGap / 1000).toFixed(
+                            1,
+                          )} tCO₂e 추가 감축이 필요합니다.`
+                        : `설정된 목표 ${(goal.target_emission / 1000).toFixed(
+                            1,
+                          )} tCO₂e 이내로 관리되고 있습니다.`
+                      : '목표 설정이 아직 없어 목표 대비 평가는 제외되었습니다.'}
                   </p>
                 </section>
 
@@ -406,19 +537,20 @@ export default function ReportsPage() {
                   </h3>
                   <p className="mt-3 text-sm leading-relaxed text-gray-700">
                     {annualData?.insight.type
-                      ? `${annualData.insight.type}가 전체 배출량의 ${annualData.insight.ratio.toFixed(0)}%를 차지합니다. 해당 활동량을 10% 줄이면 월 ${Math.round(annualData.insight.saving).toLocaleString()} kgCO₂e 감축 효과가 예상됩니다.`
+                      ? `${annualData.insight.label}가 전체 배출량의 ${annualData.insight.ratio.toFixed(0)}%를 차지합니다. ${annualData.insight.site}의 ${annualData.insight.type} 활동량을 10% 줄이면 월 ${Math.round(annualData.insight.saving).toLocaleString()} kgCO₂e 감축 효과가 예상됩니다.`
                       : '데이터가 입력되면 주요 배출원과 예상 감축 효과를 자동으로 요약합니다.'}
                   </p>
                 </section>
 
-                <section className="mt-8 grid grid-cols-2 gap-6 border-t border-gray-200 pt-6">
+                <section className="mt-8 grid grid-cols-2 gap-6 border-t border-gray-200 pt-6 print:hidden">
                   <div>
                     <h3 className="text-sm font-black text-gray-900">
                       데이터 품질 요약
                     </h3>
                     <ul className="mt-3 space-y-1 text-sm text-gray-600">
-                      <li>중복 데이터: {quality.summary.duplicates}건</li>
-                      <li>계수 확인: {quality.summary.missingFactors}건</li>
+                      <li>중복 행: {quality.summary.duplicates}건</li>
+                      <li>계수 불일치: {quality.summary.factorMismatches}건</li>
+                      <li>계수 누락: {quality.summary.missingFactors}건</li>
                       <li>이상치 후보: {quality.summary.outliers}건</li>
                       <li>필수값 누락: {quality.summary.missingRequired}건</li>
                     </ul>

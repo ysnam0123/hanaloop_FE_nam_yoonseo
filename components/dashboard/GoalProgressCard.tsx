@@ -9,13 +9,13 @@ export default function GoalProgressCard({ goal, currentEmission }: Props) {
   if (!goal) {
     return (
       <section className="rounded-xl border border-green-100 bg-white p-5 shadow-sm">
-        <p className="text-xs font-black text-[#007A33]">TARGET</p>
+        <p className="text-xs font-black text-[#007A33]">감축 목표</p>
         <h2 className="mt-2 text-lg font-black text-gray-900">
-          목표가 아직 설정되지 않았습니다
+          감축 목표가 아직 설정되지 않았습니다
         </h2>
         <p className="mt-2 text-sm text-gray-500">
-          경영진 계정으로 로그인한 뒤 사이드바의 목표설정에서 감축 기준을
-          저장하세요.
+          경영진이 목표를 설정하면 목표 대비 진행률과 추가 감축 필요량을
+          확인할 수 있습니다.
         </p>
       </section>
     );
@@ -35,7 +35,7 @@ export default function GoalProgressCard({ goal, currentEmission }: Props) {
     <section className="rounded-xl border border-green-100 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-black text-[#007A33]">TARGET</p>
+          <p className="text-xs font-black text-[#007A33]">감축 목표</p>
           <h2 className="mt-2 text-lg font-black text-gray-900">
             {goal.target_year} 감축 목표
           </h2>

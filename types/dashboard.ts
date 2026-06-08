@@ -18,5 +18,11 @@ export interface DashboardData {
     Scope2: number;
     Scope3: number;
   }[];
-  insight: { type: string; ratio: number; saving: number };
+  insight: {
+    type: string;
+    site: string;
+    label: string;
+    ratio: number;
+    saving: number;
+  };
 }

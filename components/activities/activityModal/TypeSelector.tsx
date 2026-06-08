@@ -53,7 +53,7 @@ export default function TypeSelector({
           }
           className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold border-2 border-dashed border-gray-200 text-gray-400 whitespace-nowrap hover:border-gray-300"
         >
-          + 유형 추가
+          유형 추가 안내
         </button>
       </div>
       {!hasActiveFactor && (

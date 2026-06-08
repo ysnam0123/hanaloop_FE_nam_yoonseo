@@ -1,5 +1,7 @@
 interface Insight {
   type: string;
+  site?: string;
+  label?: string;
   ratio: number;
   saving: number;
 }
@@ -84,10 +86,11 @@ export default function SummaryCards({
           💡 감축 인사이트
         </p>
         <p className="text-sm text-gray-700 leading-relaxed">
-          {insight.type}가 전체 배출량의 {insight.ratio.toFixed(0)}%를
+          {insight.label ?? insight.type}가 전체 배출량의 {insight.ratio.toFixed(0)}%를
           차지합니다.
         </p>
         <p className="text-sm text-gray-700 leading-relaxed mt-1">
+          {insight.site ? `${insight.site}의 ` : ''}
           {insight.type} 사용량을 10% 줄이면 월{' '}
           <span className="font-bold text-gray-900">
             {Math.round(insight.saving).toLocaleString()} kgCO₂e

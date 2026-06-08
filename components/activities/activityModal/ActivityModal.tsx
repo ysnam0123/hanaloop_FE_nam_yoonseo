@@ -11,6 +11,14 @@ import { isUnitCompatible } from '@/lib/factorInsights';
 
 const SITE_OPTIONS = ['본사', '김포공장', '부산물류센터'];
 
+function getSingleMatchingFactorId(factors: Factor[], type: string) {
+  const expectedUnit = TYPE_UNIT[type] ?? '';
+  const matches = factors.filter((factor) =>
+    isUnitCompatible(factor.unit, expectedUnit),
+  );
+  return matches.length === 1 ? matches[0].id : '';
+}
+
 interface Props {
   isOpen: boolean;
   mode: 'create' | 'edit';
@@ -54,11 +62,11 @@ export default function ActivityModal({
       setSite('본사');
       setDescription('');
       setAmount('');
-      setSelectedFactorId('');
+      setSelectedFactorId(getSingleMatchingFactorId(factors, '전기'));
     }
     setAmountError('');
     setFactorError('');
-  }, [isOpen, mode, data]);
+  }, [isOpen, mode, data, factors]);
 
   const expectedUnit = TYPE_UNIT[type] ?? '';
   const candidateFactors = factors.filter((factor) =>
@@ -69,7 +77,7 @@ export default function ActivityModal({
 
   function handleTypeChange(nextType: string) {
     setType(nextType);
-    setSelectedFactorId('');
+    setSelectedFactorId(getSingleMatchingFactorId(factors, nextType));
     setFactorError('');
   }
 

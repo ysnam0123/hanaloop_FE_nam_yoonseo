@@ -69,9 +69,9 @@ export default function GoalSettingsModal({ isOpen, onClose }: Props) {
       <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
         <div className="flex items-start justify-between border-b border-green-100 px-6 py-5">
           <div>
-            <p className="text-xs font-black text-[#007A33]">TARGET CONTROL</p>
+            <p className="text-xs font-black text-[#007A33]">목표 관리</p>
             <h2 className="mt-1 text-lg font-black text-gray-950">
-              목표설정
+              목표 설정
             </h2>
             <p className="mt-1 text-xs text-gray-500">
               기준연도 배출량을 바탕으로 목표연도 감축 기준을 설정합니다.

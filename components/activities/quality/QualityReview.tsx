@@ -21,25 +21,34 @@ const SEVERITY_LABEL: Record<ActivityQualityIssue['severity'], string> = {
 interface Props {
   quality: ActivityQualityResult;
   onResolveIssue: (issue: ActivityQualityIssue) => void;
+  onConfirmOutlier: (issue: ActivityQualityIssue) => void;
   onSelectStatus: (status: ActivityQualityStatus) => void;
 }
 
 export default function QualityReview({
   quality,
   onResolveIssue,
+  onConfirmOutlier,
   onSelectStatus,
 }: Props) {
   const { summary, issues } = quality;
   const cards = [
     {
-      label: '중복 데이터',
+      label: '중복 행',
       value: summary.duplicates,
-      helper: '동일 날짜·유형·설명',
+      helper: '동일 날짜·사업장·유형·설명',
       tone: 'border-red-200',
       status: 'duplicate' as const,
     },
     {
-      label: '계수 확인',
+      label: '계수 불일치',
+      value: summary.factorMismatches,
+      helper: '유형·단위와 계수 불일치',
+      tone: 'border-rose-200',
+      status: 'factorMismatch' as const,
+    },
+    {
+      label: '계수 누락',
       value: summary.missingFactors,
       helper: '계수 ID 또는 스냅샷 누락',
       tone: 'border-amber-200',
@@ -88,8 +97,8 @@ export default function QualityReview({
                 데이터 품질 검토
               </h2>
               <p className="mt-1 text-sm text-gray-500">
-                현재 필터 기준 활동 데이터에서 중복, 계수 누락, 이상치 후보를
-                자동으로 분류했습니다.
+                현재 필터 기준 활동 데이터에서 중복, 계수 불일치, 계수 누락,
+                이상치 후보를 자동으로 분류했습니다.
               </p>
             </div>
           </div>
@@ -102,7 +111,7 @@ export default function QualityReview({
         </div>
       </section>
 
-      <section className="grid grid-cols-4 gap-4">
+      <section className="grid grid-cols-5 gap-4">
         {cards.map((card) => (
           <button
             key={card.label}
@@ -138,7 +147,7 @@ export default function QualityReview({
                   '이슈 유형',
                   '관련 데이터',
                   '설명',
-                  '상태',
+                  '조치',
                 ].map((header) => (
                   <th
                     key={header}
@@ -182,12 +191,29 @@ export default function QualityReview({
                     {issue.description}
                   </td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={() => onResolveIssue(issue)}
-                        className="rounded-lg border border-green-200 px-2.5 py-1 text-xs font-bold text-[#007A33] hover:bg-green-50"
-                      >
-                        {issue.status === 'duplicate' ? '중복 처리' : '수정하기'}
-                      </button>
+                      {issue.status === 'outlier' ? (
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => onConfirmOutlier(issue)}
+                            className="rounded-lg border border-sky-200 px-2.5 py-1 text-xs font-bold text-sky-700 hover:bg-sky-50"
+                          >
+                            정상 확인
+                          </button>
+                          <button
+                            onClick={() => onResolveIssue(issue)}
+                            className="rounded-lg border border-green-200 px-2.5 py-1 text-xs font-bold text-[#007A33] hover:bg-green-50"
+                          >
+                            수정하기
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => onResolveIssue(issue)}
+                          className="rounded-lg border border-green-200 px-2.5 py-1 text-xs font-bold text-[#007A33] hover:bg-green-50"
+                        >
+                          {issue.status === 'duplicate' ? '중복 처리' : '수정하기'}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
