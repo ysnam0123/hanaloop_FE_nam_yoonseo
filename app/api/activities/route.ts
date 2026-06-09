@@ -2,9 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { calcEmission } from '@/lib/calculations';
 
+function getNextMonth(month: string) {
+  const [yearPart, monthPart] = month.split('-');
+  const year = Number(yearPart);
+  const monthNumber = Number(monthPart);
+
+  if (!year || !monthNumber || monthNumber < 1 || monthNumber > 12) {
+    return null;
+  }
+
+  if (monthNumber === 12) {
+    return `${year + 1}-01`;
+  }
+
+  return `${year}-${String(monthNumber + 1).padStart(2, '0')}`;
+}
+
 // 활동 목록 조회
 export async function GET(request: NextRequest) {
-  const url = new URL(request.url);
+  const url = request.nextUrl;
   const year = url.searchParams.get('year');
   const month = url.searchParams.get('month');
   const site = url.searchParams.get('site');
@@ -17,7 +33,16 @@ export async function GET(request: NextRequest) {
 
   // month 가 있으면 month 우선 (이미 yyyy-mm 으로 year 포함), 없으면 year 단위로 필터
   if (month) {
-    query = query.gte('date', `${month}-01`).lte('date', `${month}-31`);
+    const nextMonth = getNextMonth(month);
+
+    if (!nextMonth) {
+      return NextResponse.json(
+        { message: '잘못된 월 형식입니다.' },
+        { status: 400 },
+      );
+    }
+
+    query = query.gte('date', `${month}-01`).lt('date', `${nextMonth}-01`);
   } else if (year) {
     query = query.gte('date', `${year}-01-01`).lte('date', `${year}-12-31`);
   }

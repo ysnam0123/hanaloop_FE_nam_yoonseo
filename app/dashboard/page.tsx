@@ -47,7 +47,10 @@ export default function DashboardPage() {
           <>
             <OverviewCards data={data} quality={quality} />
             <div className="grid grid-cols-[minmax(0,1fr)_360px] gap-5">
-              <GoalProgressCard goal={goal} currentEmission={data.totalEmission} />
+              <GoalProgressCard
+                goal={goal}
+                currentEmission={data.totalEmission}
+              />
               <SiteEmissionPanel data={data} />
             </div>
             <ReductionActionPlanner data={data} quality={quality} />

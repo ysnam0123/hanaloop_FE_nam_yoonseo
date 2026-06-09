@@ -14,8 +14,8 @@ export default function GoalProgressCard({ goal, currentEmission }: Props) {
           감축 목표가 아직 설정되지 않았습니다
         </h2>
         <p className="mt-2 text-sm text-gray-500">
-          경영진이 목표를 설정하면 목표 대비 진행률과 추가 감축 필요량을
-          확인할 수 있습니다.
+          경영진이 목표를 설정하면 목표 대비 진행률과 추가 감축 필요량을 확인할
+          수 있습니다.
         </p>
       </section>
     );
@@ -46,7 +46,9 @@ export default function GoalProgressCard({ goal, currentEmission }: Props) {
         </div>
         <span
           className={`rounded-full px-3 py-1 text-xs font-black ${
-            achieved ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
+            achieved
+              ? 'bg-green-50 text-green-700'
+              : 'bg-amber-50 text-amber-700'
           }`}
         >
           {achieved ? '목표 이내' : '추가 감축 필요'}
