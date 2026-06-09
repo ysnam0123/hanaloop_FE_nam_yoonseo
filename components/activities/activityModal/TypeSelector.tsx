@@ -2,36 +2,36 @@
 
 import { useToast } from '@/components/layout/Toast';
 
-export const TYPE_UNIT: Record<string, string> = {
-  전기: 'kWh',
-  원소재: 'kg',
-  운송: 'ton-km',
-};
-
 const TYPE_ICON: Record<string, string> = {
   전기: '⚡',
   원소재: '🏭',
   운송: '🚛',
+  천연가스: '🔥',
+  폐기물: '♻️',
+  용수: '💧',
 };
 
 interface Props {
   type: string;
+  types: string[];
   onTypeChange: (type: string) => void;
   hasActiveFactor: boolean;
 }
 
 export default function TypeSelector({
   type,
+  types,
   onTypeChange,
   hasActiveFactor,
 }: Props) {
   const { showToast } = useToast();
+  const visibleTypes = types.length > 0 ? types : [type].filter(Boolean);
 
   return (
     <div>
       <p className="text-xs font-semibold text-gray-600 mb-2">유형 선택</p>
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {Object.keys(TYPE_UNIT).map((t) => (
+        {visibleTypes.map((t) => (
           <button
             key={t}
             onClick={() => onTypeChange(t)}
@@ -41,7 +41,7 @@ export default function TypeSelector({
                 : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
             }`}
           >
-            <span>{TYPE_ICON[t]}</span> {t}
+            <span>{TYPE_ICON[t] ?? '•'}</span> {t}
           </button>
         ))}
         <button
@@ -58,7 +58,7 @@ export default function TypeSelector({
       </div>
       {!hasActiveFactor && (
         <p className="mt-1.5 text-xs text-amber-600">
-          새 유형은 배출계수 탭에서 먼저 등록해주세요{' '}
+          이 유형에 사용할 활성 배출계수가 없습니다.{' '}
           <a href="/factors" className="underline font-medium">
             배출계수 탭으로 이동 →
           </a>

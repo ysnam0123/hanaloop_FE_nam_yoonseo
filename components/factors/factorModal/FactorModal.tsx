@@ -4,6 +4,10 @@ import { Factor } from '@/types/factor';
 import { useEffect, useState } from 'react';
 import NameSelector from './NameSelector';
 import FactorFields from './FactorFields';
+import {
+  getFactorActivityType,
+  getUniqueActivityTypes,
+} from '@/lib/activityTypes';
 
 interface Props {
   isOpen: boolean;
@@ -28,6 +32,7 @@ export default function FactorModal({
   const [selectedName, setSelectedName] = useState('');
 
   const [scope, setScope] = useState('Scope1');
+  const [activityType, setActivityType] = useState('');
 
   // new 일때 단위
   const [newName, setNewName] = useState('');
@@ -67,6 +72,7 @@ export default function FactorModal({
     if (mode === 'edit' && data) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedName(data.name);
+      setActivityType(getFactorActivityType(data));
       setScope(data.scope);
       setUnit(data.unit);
       setFactorValue(String(data.factor_value));
@@ -77,6 +83,7 @@ export default function FactorModal({
       setInputMode('existing');
       setSelectedName('');
       setNewName('');
+      setActivityType('');
       setScope('Scope1');
       setNewUnit('');
       setFactorValue('');
@@ -97,6 +104,7 @@ export default function FactorModal({
     clearError('name');
     const active = activeByName(name);
     if (active) {
+      setActivityType(getFactorActivityType(active));
       setScope(active.scope);
       setUnit(active.unit);
     }
@@ -107,6 +115,7 @@ export default function FactorModal({
     setNewName(v);
     setInputMode('new');
     setSelectedName('');
+    setActivityType(v.trim());
     clearError('name');
   }
 
@@ -116,7 +125,13 @@ export default function FactorModal({
     setSelectedName('');
     setUnit('');
     setScope('');
+    setActivityType('');
     setShowScopeDesc(false);
+  }
+
+  function handleActivityTypeChange(v: string) {
+    setActivityType(v);
+    clearError('activity_type');
   }
 
   // scope 버튼 클릭 시
@@ -154,11 +169,19 @@ export default function FactorModal({
     if (mode === 'create') {
       if (inputMode === 'new') {
         if (!newName.trim()) errs.name = '항목명을 입력해주세요';
+        if (!activityType.trim()) errs.activity_type = '활동 유형을 입력해주세요';
         if (!scope) errs.scope = 'Scope를 선택해주세요';
         if (!newUnit.trim()) errs.unit = '단위를 입력해주세요';
       } else {
         if (!selectedName) errs.name = '기존 항목을 선택해주세요';
+        if (!activityType.trim()) {
+          errs.activity_type = '활동 유형을 입력해주세요';
+        }
       }
+    }
+
+    if (mode === 'edit' && !activityType.trim()) {
+      errs.activity_type = '활동 유형을 입력해주세요';
     }
 
     if (!factorValue || Number(factorValue) <= 0) {
@@ -174,6 +197,7 @@ export default function FactorModal({
     const finalUnit = inputMode === 'existing' ? unit : newUnit.trim();
     onSave({
       name,
+      activity_type: activityType.trim(),
       scope,
       factor_value: Number(factorValue),
       unit: finalUnit,
@@ -186,6 +210,7 @@ export default function FactorModal({
   const currentActive = selectedName
     ? (activeByName(selectedName) ?? null)
     : null;
+  const activityTypeOptions = getUniqueActivityTypes(factors);
   const showWarning =
     inputMode === 'existing' &&
     !!selectedName &&
@@ -231,6 +256,8 @@ export default function FactorModal({
           <FactorFields
             mode={mode}
             inputMode={inputMode}
+            activityType={activityType}
+            activityTypeOptions={activityTypeOptions}
             factorValue={factorValue}
             unit={unit}
             newUnit={newUnit}
@@ -239,6 +266,7 @@ export default function FactorModal({
             errors={errors}
             currentActive={currentActive}
             showWarning={showWarning}
+            onActivityTypeChange={handleActivityTypeChange}
             onFactorValueChange={handleFactorValueChange}
             onNewUnitChange={handleNewUnitChange}
             onVersionChange={handleVersionChange}

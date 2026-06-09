@@ -4,6 +4,7 @@ import { Factor } from '@/types/factor';
 import { useState } from 'react';
 import FilterRow from './FilterRow';
 import Pagination from '@/components/common/Pagination';
+import { getFactorActivityType } from '@/lib/activityTypes';
 
 const SCOPE_BADGE: Record<string, string> = {
   Scope1: 'bg-red-100 text-red-700',
@@ -84,6 +85,7 @@ export default function FactorTable({ factors, onRowClick }: Props) {
               <tr className="border-b border-gray-100">
                 {[
                   '항목명',
+                  '활동 유형',
                   'Scope',
                   '계수값',
                   '단위',
@@ -104,7 +106,7 @@ export default function FactorTable({ factors, onRowClick }: Props) {
               {rows.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-4 py-10 text-center text-sm text-gray-400"
                   >
                     데이터가 없습니다.
@@ -121,6 +123,11 @@ export default function FactorTable({ factors, onRowClick }: Props) {
                       className={`px-4 py-3 font-medium ${f.is_active ? 'text-gray-900' : 'text-gray-400'}`}
                     >
                       {f.name}
+                    </td>
+                    <td
+                      className={`px-4 py-3 whitespace-nowrap ${f.is_active ? 'text-gray-700' : 'text-gray-400'}`}
+                    >
+                      {getFactorActivityType(f)}
                     </td>
                     <td className="px-4 py-3">
                       <span

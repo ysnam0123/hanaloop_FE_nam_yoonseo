@@ -1,6 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+function inferActivityType(name: string, unit: string) {
+  const normalizedName = name.toLowerCase();
+  const normalizedUnit = unit.replace(/\s+/g, '').toLowerCase();
+
+  if (
+    normalizedUnit.includes('kwh') ||
+    normalizedName.includes('전기') ||
+    normalizedName.includes('한국전력')
+  ) {
+    return '전기';
+  }
+  if (
+    normalizedUnit.includes('ton-km') ||
+    normalizedUnit.includes('tonkm') ||
+    normalizedName.includes('운송') ||
+    normalizedName.includes('트럭')
+  ) {
+    return '운송';
+  }
+  if (
+    normalizedUnit.includes('kg') ||
+    normalizedName.includes('플라스틱') ||
+    normalizedName.includes('알루미늄')
+  ) {
+    return '원소재';
+  }
+
+  return name;
+}
+
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const all = url.searchParams.get('all') === 'true';
@@ -52,6 +82,9 @@ export async function POST(request: NextRequest) {
   const scope = body.scope;
   const factor_value = body.factor_value;
   const unit = body.unit;
+  const rawActivityType = String(body.activity_type ?? '').trim();
+  const activity_type =
+    rawActivityType || inferActivityType(String(name), String(unit));
   const version = body.version;
   const valid_from = body.valid_from;
   // 클라가 명시 안 하면 기본 true (기존 동작 유지)
@@ -77,6 +110,7 @@ export async function POST(request: NextRequest) {
     .from('emission_factors')
     .insert({
       name: name,
+      activity_type: activity_type,
       scope: scope,
       factor_value: factor_value,
       unit: unit,

@@ -54,7 +54,7 @@ export async function PUT(
       factor_value_snapshot: factor_value_snapshot,
     })
     .eq('id', id)
-    .select('*, emission_factors(name, scope, unit)')
+    .select('*, emission_factors(name, activity_type, scope, unit)')
     .single();
 
   if (error) {

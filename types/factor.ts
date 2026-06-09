@@ -1,6 +1,7 @@
 export interface Factor {
   id: string;
   name: string;
+  activity_type: string;
   scope: string;
   factor_value: number;
   unit: string;

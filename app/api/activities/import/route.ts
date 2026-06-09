@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   // 배출계수 미리 가져오기 (현재 적용중인 계수만 매칭 대상)
   const factorsRes = await supabase
     .from('emission_factors')
-    .select('id, name, factor_value')
+    .select('id, name, activity_type, factor_value')
     .eq('is_active', true);
   const factors = factorsRes.data ?? [];
 
@@ -52,12 +52,22 @@ export async function POST(request: NextRequest) {
 
     // 공백/대소문자 차이로 매칭 놓치지 않도록 정규화 후 부분 문자열 비교
     const desc = (description ?? '').replace(/\s+/g, '').toLowerCase();
-    let factor: { id: string; name: string; factor_value: number } | null =
-      null;
+    let factor: {
+      id: string;
+      name: string;
+      activity_type?: string;
+      factor_value: number;
+    } | null = null;
     for (let j = 0; j < factors.length; j++) {
       const f = factors[j];
       const fname = (f.name ?? '').replace(/\s+/g, '').toLowerCase();
-      if (fname.includes(desc) || desc.includes(fname)) {
+      const ftype = (f.activity_type ?? '').replace(/\s+/g, '').toLowerCase();
+      const rowType = (type ?? '').replace(/\s+/g, '').toLowerCase();
+      if (
+        (rowType && ftype === rowType) ||
+        fname.includes(desc) ||
+        desc.includes(fname)
+      ) {
         factor = f;
         break;
       }

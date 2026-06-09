@@ -1,4 +1,5 @@
 import { Factor } from '@/types/factor';
+import { getFactorActivityType } from '@/lib/activityTypes';
 
 const SCOPE_BADGE: Record<string, string> = {
   Scope1: 'bg-red-100 text-red-700',
@@ -40,11 +41,16 @@ export default function FactorCards({ factors, onEdit, onDeactivate }: Props) {
             <h3 className="text-[15px] font-bold text-gray-900 mb-2 leading-tight">
               {f.name}
             </h3>
-            <span
-              className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${SCOPE_BADGE[f.scope] ?? 'bg-gray-100 text-gray-600'}`}
-            >
-              {f.scope}
-            </span>
+            <div className="flex flex-wrap gap-1.5">
+              <span className="rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-700">
+                {getFactorActivityType(f)}
+              </span>
+              <span
+                className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${SCOPE_BADGE[f.scope] ?? 'bg-gray-100 text-gray-600'}`}
+              >
+                {f.scope}
+              </span>
+            </div>
 
             <div className="mt-4 flex items-baseline gap-1.5">
               <span className="text-2xl font-bold text-gray-900">

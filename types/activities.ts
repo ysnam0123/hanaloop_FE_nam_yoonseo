@@ -10,7 +10,12 @@ export type Activity = {
   factor_value_snapshot: number;
   emission: number;
   is_duplicate: boolean;
-  emission_factors: { name: string; scope: string; unit: string };
+  emission_factors: {
+    name: string;
+    activity_type?: string;
+    scope: string;
+    unit: string;
+  };
 };
 
 export interface DuplicateGroup {

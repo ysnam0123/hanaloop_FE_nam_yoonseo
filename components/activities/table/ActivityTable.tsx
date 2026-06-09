@@ -29,6 +29,7 @@ interface Props {
   onDuplicateClick: (a: Activity) => void;
   onImport: (file: File) => void;
   qualityStatusById?: Record<string, ActivityQualityStatus>;
+  typeOptions: string[];
 }
 
 export default function ActivityTable({
@@ -42,6 +43,7 @@ export default function ActivityTable({
   onDuplicateClick,
   onImport,
   qualityStatusById = {},
+  typeOptions,
 }: Props) {
   const [page, setPage] = useState(1);
 
@@ -71,6 +73,7 @@ export default function ActivityTable({
         onFilterChange={changeFilter}
         onCreate={onCreate}
         onImport={onImport}
+        typeOptions={typeOptions}
       />
 
       {/* Table */}

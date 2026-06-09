@@ -4,18 +4,19 @@ import { useEffect, useState } from 'react';
 import { useToast } from '@/components/layout/Toast';
 import { Activity } from '@/types/activities';
 import { Factor } from '@/types/factor';
-import TypeSelector, { TYPE_UNIT } from './TypeSelector';
+import TypeSelector from './TypeSelector';
 import EmissionPreview from './EmissionPreview';
 import FactorSelector from './FactorSelector';
-import { isUnitCompatible } from '@/lib/factorInsights';
+import {
+  getActivityUnitFromFactor,
+  getFactorActivityType,
+  getUniqueActivityTypes,
+} from '@/lib/activityTypes';
 
 const SITE_OPTIONS = ['본사', '김포공장', '부산물류센터'];
 
 function getSingleMatchingFactorId(factors: Factor[], type: string) {
-  const expectedUnit = TYPE_UNIT[type] ?? '';
-  const matches = factors.filter((factor) =>
-    isUnitCompatible(factor.unit, expectedUnit),
-  );
+  const matches = factors.filter((factor) => getFactorActivityType(factor) === type);
   return matches.length === 1 ? matches[0].id : '';
 }
 
@@ -48,6 +49,7 @@ export default function ActivityModal({
 
   useEffect(() => {
     if (!isOpen) return;
+    const activityTypes = getUniqueActivityTypes(factors);
     if (mode === 'edit' && data) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setType(data.type);
@@ -57,23 +59,24 @@ export default function ActivityModal({
       setAmount(String(data.amount));
       setSelectedFactorId(data.factor_id);
     } else {
-      setType('전기');
+      const initialType = activityTypes[0] ?? '전기';
+      setType(initialType);
       setDate(new Date().toISOString().split('T')[0]);
       setSite('본사');
       setDescription('');
       setAmount('');
-      setSelectedFactorId(getSingleMatchingFactorId(factors, '전기'));
+      setSelectedFactorId(getSingleMatchingFactorId(factors, initialType));
     }
     setAmountError('');
     setFactorError('');
   }, [isOpen, mode, data, factors]);
 
-  const expectedUnit = TYPE_UNIT[type] ?? '';
-  const candidateFactors = factors.filter((factor) =>
-    isUnitCompatible(factor.unit, expectedUnit),
+  const activityTypes = getUniqueActivityTypes(factors, type ? [type] : []);
+  const candidateFactors = factors.filter(
+    (factor) => getFactorActivityType(factor) === type,
   );
   const activeFactor = candidateFactors.find((f) => f.id === selectedFactorId);
-  const unit = expectedUnit;
+  const unit = getActivityUnitFromFactor(activeFactor, type);
 
   function handleTypeChange(nextType: string) {
     setType(nextType);
@@ -123,6 +126,7 @@ export default function ActivityModal({
         <div className="px-6 pb-6 space-y-5">
           <TypeSelector
             type={type}
+            types={activityTypes}
             onTypeChange={handleTypeChange}
             hasActiveFactor={candidateFactors.length > 0}
           />
@@ -130,7 +134,7 @@ export default function ActivityModal({
           <FactorSelector
             factors={candidateFactors}
             selectedFactorId={selectedFactorId}
-            expectedUnit={expectedUnit}
+            expectedUnit={unit || '계수 선택 필요'}
             error={factorError}
             onSelect={(factorId) => {
               setSelectedFactorId(factorId);

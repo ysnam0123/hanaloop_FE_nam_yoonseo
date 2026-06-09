@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from('activities')
-    .select('*, emission_factors(name, scope, unit)')
+    .select('*, emission_factors(name, activity_type, scope, unit)')
     .order('date', { ascending: true });
 
   // month 가 있으면 month 우선 (이미 yyyy-mm 으로 year 포함), 없으면 year 단위로 필터
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
       factor_id: factor_id,
       factor_value_snapshot: factorRes.data.factor_value,
     })
-    .select('*, emission_factors(name, scope, unit)')
+    .select('*, emission_factors(name, activity_type, scope, unit)')
     .single();
 
   if (insertRes.error) {

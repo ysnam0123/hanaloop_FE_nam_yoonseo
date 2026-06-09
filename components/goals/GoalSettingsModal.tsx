@@ -11,7 +11,7 @@ interface Props {
   onClose: () => void;
 }
 
-const FOCUS_OPTIONS = ['전체', '전기', '원소재', '운송'];
+const DEFAULT_FOCUS_OPTIONS = ['전체', '전기', '원소재', '운송'];
 
 export default function GoalSettingsModal({ isOpen, onClose }: Props) {
   const { user } = useAuth();
@@ -24,6 +24,10 @@ export default function GoalSettingsModal({ isOpen, onClose }: Props) {
   const { data: baselineData } = useCalculationsQuery(baselineYear);
   const { data: existingGoal } = useGoalQuery(targetYear);
   const baselineEmission = baselineData?.totalEmission ?? 0;
+  const focusOptions = useMemo(() => {
+    const types = baselineData?.typeRatio.map((item) => item.type) ?? [];
+    return Array.from(new Set([...DEFAULT_FOCUS_OPTIONS, ...types]));
+  }, [baselineData]);
   const targetEmission = useMemo(() => {
     const rate = Number(reductionRate) || 0;
     return Math.max(0, baselineEmission * (1 - rate / 100));
@@ -142,7 +146,7 @@ export default function GoalSettingsModal({ isOpen, onClose }: Props) {
               onChange={(event) => setFocusType(event.target.value)}
               className="mt-1.5 h-10 w-full rounded-xl border border-gray-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             >
-              {FOCUS_OPTIONS.map((option) => (
+              {focusOptions.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>

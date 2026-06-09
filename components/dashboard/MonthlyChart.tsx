@@ -15,18 +15,24 @@ import { getTypeColor } from '@/lib/chartColors';
 
 interface DataPoint {
   month: string;
-  전기: number;
-  원소재: number;
-  운송: number;
+  [type: string]: string | number;
 }
 
 export default function MonthlyChart({ data }: { data: DataPoint[] }) {
+  const typeKeys = Array.from(
+    new Set(
+      data.flatMap((item) => Object.keys(item).filter((key) => key !== 'month')),
+    ),
+  );
   const avg =
     data.length > 0
-      ? data.reduce(
-          (sum, d) => sum + (d.전기 ?? 0) + (d.원소재 ?? 0) + (d.운송 ?? 0),
-          0,
-        ) / data.length
+      ? data.reduce((sum, d) => {
+          const monthTotal = typeKeys.reduce(
+            (monthSum, key) => monthSum + Number(d[key] ?? 0),
+            0,
+          );
+          return sum + monthTotal;
+        }, 0) / data.length
       : 0;
 
   return (
@@ -89,14 +95,15 @@ export default function MonthlyChart({ data }: { data: DataPoint[] }) {
               }}
             />
           )}
-          <Bar dataKey="전기" stackId="s" fill={getTypeColor('전기')} />
-          <Bar dataKey="원소재" stackId="s" fill={getTypeColor('원소재')} />
-          <Bar
-            dataKey="운송"
-            stackId="s"
-            fill={getTypeColor('운송')}
-            radius={[3, 3, 0, 0]}
-          />
+          {typeKeys.map((type, index) => (
+            <Bar
+              key={type}
+              dataKey={type}
+              stackId="s"
+              fill={getTypeColor(type)}
+              radius={index === typeKeys.length - 1 ? [3, 3, 0, 0] : undefined}
+            />
+          ))}
         </BarChart>
       </ResponsiveContainer>
     </div>

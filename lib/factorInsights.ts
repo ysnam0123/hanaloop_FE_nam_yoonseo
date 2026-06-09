@@ -1,8 +1,8 @@
 import { Factor } from '@/types/factor';
+import { getFactorActivityType } from './activityTypes';
 
 export interface FactorCoverageItem {
   type: string;
-  unit: string;
   covered: boolean;
 }
 
@@ -29,7 +29,6 @@ export function isUnitCompatible(factorUnit: string, expectedUnit: string) {
 
 export function getFactorInsights(
   factors: Factor[],
-  typeUnits: Record<string, string>,
 ): FactorInsights {
   const activeFactors = factors.filter((f) => f.is_active);
   const inactiveFactors = factors.filter((f) => !f.is_active);
@@ -44,12 +43,16 @@ export function getFactorInsights(
     .filter((name) => activeByName[name] > 1)
     .map((name) => ({ name, count: activeByName[name] }));
 
-  const coverage = Object.keys(typeUnits).map((type) => {
-    const unit = typeUnits[type];
+  const activityTypes = Array.from(
+    new Set(factors.map((factor) => getFactorActivityType(factor))),
+  );
+
+  const coverage = activityTypes.map((type) => {
     return {
       type,
-      unit,
-      covered: activeFactors.some((factor) => isUnitCompatible(factor.unit, unit)),
+      covered: activeFactors.some(
+        (factor) => getFactorActivityType(factor) === type,
+      ),
     };
   });
 

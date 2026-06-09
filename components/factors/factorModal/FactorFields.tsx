@@ -3,6 +3,8 @@ import type { Factor } from '@/types/factor';
 interface Props {
   mode: 'create' | 'edit';
   inputMode: 'existing' | 'new';
+  activityType: string;
+  activityTypeOptions: string[];
   factorValue: string;
   unit: string;
   newUnit: string;
@@ -11,6 +13,7 @@ interface Props {
   errors: Record<string, string>;
   currentActive: Factor | null;
   showWarning: boolean;
+  onActivityTypeChange: (v: string) => void;
   onFactorValueChange: (v: string) => void;
   onNewUnitChange: (v: string) => void;
   onVersionChange: (v: string) => void;
@@ -20,6 +23,8 @@ interface Props {
 export default function FactorFields({
   mode,
   inputMode,
+  activityType,
+  activityTypeOptions,
   factorValue,
   unit,
   newUnit,
@@ -28,6 +33,7 @@ export default function FactorFields({
   errors,
   currentActive,
   showWarning,
+  onActivityTypeChange,
   onFactorValueChange,
   onNewUnitChange,
   onVersionChange,
@@ -43,6 +49,35 @@ export default function FactorFields({
       </p>
 
       <div className="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
+            활동 유형
+          </label>
+          <input
+            list="activity-type-options"
+            readOnly={inputMode === 'existing' && mode === 'create'}
+            placeholder="예: 전기, 천연가스"
+            value={activityType}
+            onChange={(e) => onActivityTypeChange(e.target.value)}
+            className={`w-full border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 ${
+              inputMode === 'existing' && mode === 'create'
+                ? 'border-gray-100 bg-gray-50 text-gray-500 cursor-not-allowed'
+                : errors.activity_type
+                  ? 'border-red-400'
+                  : 'border-gray-200'
+            }`}
+          />
+          <datalist id="activity-type-options">
+            {activityTypeOptions.map((type) => (
+              <option key={type} value={type} />
+            ))}
+          </datalist>
+          {errors.activity_type && (
+            <p className="mt-1 text-xs text-red-500">
+              {errors.activity_type}
+            </p>
+          )}
+        </div>
         <div>
           <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
             계수값

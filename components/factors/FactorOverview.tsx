@@ -21,7 +21,7 @@ export default function FactorOverview({ insights }: Props) {
     {
       label: '활동 유형 커버리지',
       value: `${insights.coverageRate}%`,
-      helper: '전기·원소재·운송 기준',
+      helper: 'DB 활동 유형 기준',
       tone: 'border-sky-200',
     },
     {

@@ -18,6 +18,7 @@ interface Props {
   onFilterChange: (f: Partial<Filters>) => void;
   onCreate: () => void;
   onImport: (file: File) => void;
+  typeOptions: string[];
 }
 
 export default function ActivityToolbar({
@@ -26,6 +27,7 @@ export default function ActivityToolbar({
   onFilterChange,
   onCreate,
   onImport,
+  typeOptions,
 }: Props) {
   const months = Array.from({ length: 12 }, (_, i) => {
     const m = String(i + 1).padStart(2, '0');
@@ -65,9 +67,11 @@ export default function ActivityToolbar({
           className="text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           <option value="">모든 유형</option>
-          <option value="전기">전기</option>
-          <option value="원소재">원소재</option>
-          <option value="운송">운송</option>
+          {typeOptions.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
         </select>
       </div>
       <div>

@@ -13,7 +13,6 @@ import { useAllFactorsQuery } from '@/hooks/factors/useFactors';
 import { useSaveFactorMutation } from '@/hooks/factors/useSaveFactor';
 import { useActivateFactorMutation } from '@/hooks/factors/useActivateFactor';
 import { useDeactivateFactorMutation } from '@/hooks/factors/useDeActivateFactor';
-import { TYPE_UNIT } from '@/components/activities/activityModal/TypeSelector';
 import { getFactorInsights } from '@/lib/factorInsights';
 
 export default function FactorsPage() {
@@ -26,7 +25,7 @@ export default function FactorsPage() {
   // 배출계수 조회
   const { data: allFactors = [] } = useAllFactorsQuery();
   const factorInsights = useMemo(
-    () => getFactorInsights(allFactors, TYPE_UNIT),
+    () => getFactorInsights(allFactors),
     [allFactors],
   );
 

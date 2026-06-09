@@ -70,10 +70,16 @@ function hasFactorMismatch(activity: Activity): boolean {
   if (!factor) return false;
 
   const factorName = normalize(factor.name);
+  const factorActivityType = normalize(factor.activity_type);
   const description = normalize(activity.description);
   const unit = normalize(activity.unit);
   const factorUnit = normalize(factor.unit);
   const type = activity.type;
+  const normalizedType = normalize(type);
+
+  if (factorActivityType && factorActivityType !== normalizedType) {
+    return true;
+  }
 
   const nameLooksWrong =
     description.length > 0 &&

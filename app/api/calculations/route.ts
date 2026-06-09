@@ -62,12 +62,8 @@ export async function GET(request: NextRequest) {
   }
   const monthlyChangeRate = changeRate(currMonthEmission, prevMonthEmission);
 
-  const monthlyByType: {
-    month: string;
-    전기: number;
-    원소재: number;
-    운송: number;
-  }[] = [];
+  const monthlyByType: ({ month: string } & Record<string, string | number>)[] =
+    [];
   const scopeMonthly: {
     month: string;
     Scope1: number;
@@ -100,12 +96,11 @@ export async function GET(request: NextRequest) {
       }
     }
     if (mIdx === -1) {
-      monthlyByType.push({ month: month, 전기: 0, 원소재: 0, 운송: 0 });
+      monthlyByType.push({ month: month });
       mIdx = monthlyByType.length - 1;
     }
-    if (a.type === '전기') monthlyByType[mIdx].전기 += emission;
-    else if (a.type === '원소재') monthlyByType[mIdx].원소재 += emission;
-    else if (a.type === '운송') monthlyByType[mIdx].운송 += emission;
+    const existingTypeValue = Number(monthlyByType[mIdx][a.type] ?? 0);
+    monthlyByType[mIdx][a.type] = existingTypeValue + emission;
 
     // scopeMonthly 누적
     let sIdx = -1;

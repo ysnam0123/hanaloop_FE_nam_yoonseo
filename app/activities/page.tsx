@@ -21,6 +21,7 @@ import {
   ActivityQualityIssue,
   getActivityQuality,
 } from '@/lib/activityQuality';
+import { getUniqueActivityTypes } from '@/lib/activityTypes';
 
 type DataTab = 'list' | 'quality';
 
@@ -111,6 +112,10 @@ export default function ActivitiesPage() {
   // 실제 DB의 활성 배출계수만 모달에 전달
   const { data: allFactors = [] } = useAllFactorsQuery();
   const activeFactors = allFactors.filter((f) => f.is_active);
+  const typeOptions = useMemo(
+    () => getUniqueActivityTypes(activeFactors, activities.map((a) => a.type)),
+    [activeFactors, activities],
+  );
 
   // 헤더 년도 변경 시 month 필터 리셋 (옛 년도의 month 값이 새 옵션에 없음)
   function handleYearChange(y: number) {
@@ -270,6 +275,7 @@ export default function ActivitiesPage() {
               onDuplicateClick={openDuplicateGroup}
               onImport={handleImport}
               qualityStatusById={quality.statusById}
+              typeOptions={typeOptions}
             />
 
             <BottomStats

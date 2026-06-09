@@ -4,12 +4,7 @@ export interface DashboardData {
   prevYearEmission: number;
   monthlyChangeRate: number | null;
   yearlyChangeRate: number | null;
-  monthlyByType: {
-    month: string;
-    전기: number;
-    원소재: number;
-    운송: number;
-  }[];
+  monthlyByType: ({ month: string } & Record<string, string | number>)[];
   typeRatio: { type: string; value: number; ratio: number }[];
   siteRatio: { site: string; value: number; ratio: number }[];
   scopeMonthly: {
