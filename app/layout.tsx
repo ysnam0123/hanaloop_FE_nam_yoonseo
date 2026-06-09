@@ -10,6 +10,9 @@ const geist = Geist({ variable: '--font-geist', subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'CarbonLoop',
   description: '탄소 활동데이터 입력부터 품질 검토, 배출계수 적용, 보고서 작성까지 연결하는 탄소관리 플랫폼',
+  icons: {
+    icon: '/icon.svg',
+  },
 };
 
 export default function RootLayout({
